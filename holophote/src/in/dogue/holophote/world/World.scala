@@ -1,23 +1,31 @@
 package in.dogue.holophote.world
 
-import in.dogue.holophote.entities.EntityManager
+import in.dogue.holophote.entities.{Player, EntityManager}
 import in.dogue.antiqua.graphics.TileRenderer
 import com.deweyvm.gleany.data.Recti
+import in.dogue.holophote.environment.Field
+import java.util.Random
+import in.dogue.holophote.mode.Mode
 
 object World {
-  def create(cols:Int, rows:Int) = {
+  def create(cols:Int, rows:Int, r:Random) = {
     val buff = 10
     val rect = Recti(-buff, -buff, cols + 2*buff, rows + 2*buff)
-    World(EntityManager.create(rect))
+    val p = Player.create(cols, rows, (16,24))
+    World(Field.create(cols, rows, r), p, EntityManager.create(rect))
   }
 }
 
-case class World private (em:EntityManager) {
+case class World private (f:Field, p:Player, em:EntityManager) {
   def update = {
-    copy(em=em.update)
+    val newEm = em.update
+    val newP = newEm.process(p.update)
+    copy(em=em.update, f=f.update, p = newP).toMode
   }
 
   def draw(tr:TileRenderer):TileRenderer = {
-    tr <+< em.draw
+    tr <+< f.draw <+< p.draw <+< em.draw
   }
+
+  def toMode:Mode = Mode[World](_.update, _.draw, this)
 }

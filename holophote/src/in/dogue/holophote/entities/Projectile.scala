@@ -26,7 +26,7 @@ case class Projectile private (ij:Cell, path:Path, t:Tile) {
   def update = copy(path=path.update).toEntity.seq
   def getPos = path.getPos(ij)
   def draw(tr:TileRenderer):TileRenderer = {
-    tr <+ (getPos, t)
+    tr <| (getPos, t)
   }
 
   def toEntity:Entity = Entity[Projectile](this, _.getPos, _.update, _.draw, _.toEntity)

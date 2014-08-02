@@ -2,6 +2,8 @@ package in.dogue.holophote.entities
 
 import in.dogue.antiqua.graphics.TileRenderer
 import com.deweyvm.gleany.data.Recti
+import in.dogue.antiqua.Antiqua
+import Antiqua._
 
 object EntityManager {
   def create(rect:Recti) = {
@@ -20,6 +22,19 @@ case class EntityManager private (es:Seq[Entity], rect:Recti) {
     }
     copy(es = newEs)
   }
+
+
+  def process(p:Player) = {
+    val f = if (es.exists{e => e.pos == p.pos}) {
+      (p:Player) => p.kill
+    } else {
+      id[Player] _
+    }
+
+    f(p)
+
+  }
+
   def draw(tr:TileRenderer):TileRenderer = {
     tr <++< es.map {_.draw _ }
   }
