@@ -11,14 +11,18 @@ import in.dogue.holophote.input.HolophoteControls
 object Main {
   def main(args: Array[String]) {
 
-    val iconPath = "sprites/icon.gif"
+    val iconPaths = Seq(
+      "sprites/icon16.png",
+      "sprites/icon24.png",
+      "sprites/icon32.png"
+    )
     val settings = new Settings(HolophoteControls, new SettingDefaults() {
       val SfxVolume: Float = 0.2f
       val MusicVolume: Float = 0.2f
       val WindowSize: Point2i = Point2i(512,512)
       val DisplayMode: Int = 0
     }, false)
-    val config = new GleanyConfig(settings, "profundus", iconPath.some)
+    val config = new GleanyConfig(settings, "Holophote", iconPaths)
     val pathResolver = new PathResolver(
       "fonts",
       "sprites",

@@ -5,7 +5,7 @@ import com.deweyvm.gleany.data.Recti
 
 object EntityManager {
   def create(rect:Recti) = {
-    val pp = PewPew.create((10,10))
+    val pp = PewPew.create((16,16))
     EntityManager(Seq(), rect).addEntity(pp.toEntity)
   }
 }
