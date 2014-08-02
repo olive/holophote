@@ -14,6 +14,7 @@ object EntityManager {
 
 case class EntityManager private (es:Seq[Entity], rect:Recti) {
   def addEntity(e:Entity) = copy(es=es:+e)
+  def addEntities(ess:Seq[Entity]) = copy(es = es ++ ess)
   def update = {
     val newEs = es.map{
       _.update

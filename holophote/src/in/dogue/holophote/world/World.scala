@@ -19,8 +19,9 @@ object World {
 case class World private (f:Field, p:Player, em:EntityManager) {
   def update = {
     val newEm = em.update
-    val newP = newEm.process(p.update)
-    copy(em=em.update, f=f.update, p = newP).toMode
+    val (upP, pProj) = p.update
+    val newP = newEm.process(upP)
+    copy(em=em.update.addEntities(pProj), f=f.update, p = newP).toMode
   }
 
   def draw(tr:TileRenderer):TileRenderer = {

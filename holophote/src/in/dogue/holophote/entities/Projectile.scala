@@ -8,7 +8,7 @@ import in.dogue.antiqua.data.{CP437, Direction}
 import com.deweyvm.gleany.graphics.Color
 
 object Projectile {
-  def create(ij:Cell, d:Direction, color:Color, t0:Int)= {
+  def createSpiral(ij:Cell, color:Color, t0:Int)= {
     val t = CP437.*.mkTile(Color.Black, color)
     val angle = (math.Pi*2 * math.sin( t0/50.0)) % (2*math.Pi)
     val dx = math.cos(angle)
@@ -18,7 +18,10 @@ object Projectile {
     } { t =>
       t*dy
     }
-    Projectile(ij, path, t)
+    create(ij, path, t)
+  }
+  def create(ij:Cell, path:Path, tile:Tile)= {
+    Projectile(ij, path, tile)
   }
 }
 

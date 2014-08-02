@@ -20,7 +20,7 @@ case class PewPew private (ij:Cell, tile:Tile, t:Int) {
     val hue = (t/100.0) % 1
     val newT = t + 1
     if (newT % 3 == 0) {
-      val p = Projectile.create(ij, Direction.Up, Color.fromHsb(hue,1, 1), newT)
+      val p = Projectile.createSpiral(ij, Color.fromHsb(hue,1, 1), newT)
       Seq(copy(t=newT).toEntity, p.toEntity)
     } else {
       Seq(copy(t=newT).toEntity)
