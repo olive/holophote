@@ -6,14 +6,15 @@ import java.util.Random
 import in.dogue.holophote.input.Controls
 import com.badlogic.gdx.Gdx
 import in.dogue.holophote.mode.TitleMode
+import in.dogue.antiqua.geometry.StarPolygon
 
 class Engine {
-  val cols = 32
-  val rows = 32
-  val ts = new Tileset(16, 16, 16, 16, AssetLoader.loadTexture("16x16"))
-  val r = new Renderer(512, 512, 1, ts)
+  val cols = Game.Cols
+  val rows = Game.Rows
+  val ts = new Tileset(16, 16, Game.TileSize, Game.TileSize, AssetLoader.loadTexture("16x16"))
+  val r = new Renderer(cols*Game.TileSize, rows*Game.TileSize, 1, ts)
   val tr = TileRenderer.create(cols, rows)
-  val rng = new Random()
+  val rng = new Random(0)
   var mode = TitleMode.create(cols, rows, rng).toMode
   def update() {
     if (Controls.Escape.justPressed) {

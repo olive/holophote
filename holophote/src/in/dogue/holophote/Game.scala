@@ -6,6 +6,10 @@ import in.dogue.holophote.input.Controls
 
 object Game {
   var t = 0
+  val Version = "0.0.1"
+  val Cols = 96
+  val Rows = 32
+  val TileSize = 16
 }
 
 class Game(initializer: GleanyInitializer) extends GleanyGame(initializer) {

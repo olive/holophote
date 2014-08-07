@@ -19,7 +19,7 @@ object Main {
     val settings = new Settings(HolophoteControls, new SettingDefaults() {
       val SfxVolume: Float = 0.2f
       val MusicVolume: Float = 0.2f
-      val WindowSize: Point2i = Point2i(512,512)
+      val WindowSize: Point2i = Point2i(Game.Cols*Game.TileSize,Game.Rows*Game.TileSize)
       val DisplayMode: Int = 0
     }, false)
     val config = new GleanyConfig(settings, "Holophote", iconPaths)
