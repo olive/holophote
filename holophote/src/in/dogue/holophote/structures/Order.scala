@@ -6,5 +6,6 @@ import in.dogue.holophote.resources.ResourceManager
 
 trait Order {
   def next:(Option[Order], Task)
+  def rewind:Order
 }
 
