@@ -5,7 +5,7 @@ import com.deweyvm.gleany.{AssetLoader, Glean}
 import java.util.Random
 import in.dogue.holophote.input.Controls
 import com.badlogic.gdx.Gdx
-import in.dogue.holophote.mode.TitleMode
+import in.dogue.holophote.mode.{GameMode, TitleMode}
 import in.dogue.antiqua.geometry.StarPolygon
 
 class Engine {
@@ -15,7 +15,7 @@ class Engine {
   val r = new Renderer(cols*Game.TileSize, rows*Game.TileSize, 1, ts)
   val tr = TileRenderer.create(cols, rows)
   val rng = new Random(0)
-  var mode = TitleMode.create(cols, rows, rng).toMode
+  var mode = GameMode.create(cols, rows, rng).toMode//TitleMode.create(cols, rows, rng).toMode
   def update() {
     if (Controls.Escape.justPressed) {
       Gdx.app.exit()
