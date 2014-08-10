@@ -11,7 +11,6 @@ sealed trait Order {
 case class TaskList(s:List[Task]) extends Order {
   def next = s match {
     case x::xs =>
-      println("next " + x + " " + s)
       TaskList(xs) @@ x.some
     case _ => none @@ None
   }

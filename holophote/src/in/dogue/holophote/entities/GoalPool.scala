@@ -8,15 +8,11 @@ object GoalPool {
 }
 
 case class GoalPool(goals:List[Goal]) {
-  def reserve(g:Goal) = {
-    val i = goals.indexOf(g)
-    if (i == -1) {
-      this
-    } else {
-      copy(goals = goals.updated(i, g.reserve))
-    }
+  def reserve(g:Goal, gs:List[Goal]) = {
+    copy(goals = g.reserve +: gs)
   }
   def surrender(g:Goal) = {
+    println("Goal " + g.id + " dropped")
     val i = goals.indexOf(g)
     if (i == -1) {
       this
@@ -25,13 +21,16 @@ case class GoalPool(goals:List[Goal]) {
     }
 
   }
-  def finish(g:Goal) = copy(goals=goals.filter { gg => gg != g})
+  def finish(g:Goal) = {
+    println("goal " + g.id + " finished")
+    copy(goals=goals.filter { gg => gg != g})
+  }
 
   def giveGoal(b:Builder) = {
     goals.splitFind((g:Goal) => !g.isReserved) match {
       case Some((g, gpp)) =>
-        println("found one!")
-        b.giveGoal(g) @@ reserve(g)
+        println("found one! " + g.id)
+        b.giveGoal(g) @@ reserve(g, gpp)
       case None => b @@ this
     }
   }

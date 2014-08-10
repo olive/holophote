@@ -18,17 +18,20 @@ object Builder {
   def create(cols:Int, rows:Int, pos:Cell,  r:Random) = {
     val tile = CP437.B.mkTile(Color.Black, Color.White)
     count += 1
-    Builder(pos, tile,  r, 0, NoTask, NoOrder, None, Seq(Stone, Stone, Stone), count)
+    Builder(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Seq(Stone, Stone, Stone), count)
   }
 
   def performTask(builder:Builder, gp:GoalPool, world:World) = {
     val (b, w) = builder.task.perform(builder, world, gp)
     if (b.task.isNone) {
-      val (no, ntOpt) = builder.order.next
+      val (no, ntOpt) = b.order.next
       ntOpt match {
         case Some(t) =>
-          b.setTask(t, no) @@ gp @@ w
+          b.setOrder(t, no) @@ gp @@ w
         case None =>
+          if (b.hasGoal && !b.goal.check(b, w)) {
+            throw new RuntimeException()
+          }
           finishGoal(b, gp) @@ w
       }
     } else {
@@ -42,23 +45,23 @@ object Builder {
 
 }
 
-case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Option[Goal], inv:Seq[Resource], id:Int) {
+case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Seq[Resource], id:Int) {
   def noOrder = order.isNone
   def noTask = task.isNone
   def noGoal = goal.isEmpty
 
-  private def updateOrder(w:World) = {
+  private def updateOrder(p:BuilderProxy, w:World) = {
     goal match {
       case Some(g) =>
-        val ord = g.toOrder(this, w.toGraph).getOrElse(order.none)
+        val ord = g.toOrder(this, w.toGraph(p)).getOrElse(order.none)
         copy(order=ord)
       case _ => this
     }
   }
 
-  def update(w:World) = {
+  def update(p:BuilderProxy, w:World) = {
     if (noOrder) {
-      updateOrder(w)
+      updateOrder(p, w)
     } else {
       this
     }
@@ -66,10 +69,7 @@ case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order,
 
   def removeGoal = copy(task=task.none, order=order.none, goal=None)
 
-  def setTask(t:Task, o:Order):Builder = {
-    if (!o.isNone) {
-      println(o)
-    }
+  def setOrder(t:Task, o:Order):Builder = {
     copy(task=t, order=o)
   }
 
