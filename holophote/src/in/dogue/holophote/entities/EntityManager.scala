@@ -1,18 +1,27 @@
 package in.dogue.holophote.entities
 
-import in.dogue.holophote.actions.Action
+import in.dogue.antiqua.Antiqua
+import Antiqua._
 import in.dogue.holophote.world.World
-import in.dogue.holophote.structures.Order
 
 class EntityManager {
-  val orders:List[Order]
-  def process(w:World, b:Builder) = {
-    val (nb, action)  = b.update
-    a match {
-      case Move(c) =>
 
+
+
+  def manageTask(b:Builder, gp:GoalPool, w:World):(Builder, GoalPool, World) = {
+    if (b.task.allowed(b, w)) {
+      Builder.performTask(b, gp, w)
+    } else {
+      b.removeGoal @@ b.goal.map{g => gp.surrender(g) }.getOrElse(gp) @@ w
     }
   }
 
-  def performAction(b:Builder, a:Action):(Builder, Option[Order])
+
+  def manageGoals(b:Builder, gp:GoalPool) = {
+    if (b.noGoal) {
+      gp.giveGoal(b)
+    } else {
+      (b, gp)
+    }
+  }
 }

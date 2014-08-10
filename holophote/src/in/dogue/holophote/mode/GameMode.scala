@@ -17,7 +17,7 @@ object GameMode {
     val es = (0 until 10) map { i =>
       val x = r.nextInt(cols)
       val y = r.nextInt(rows)
-      Builder.create(cols, rows, (x, y), world.toGraph, r).toEntity
+      Builder.create(cols, rows, (x, y), r).toEntity
     }
     GameMode(cols, rows, world, es)
   }
