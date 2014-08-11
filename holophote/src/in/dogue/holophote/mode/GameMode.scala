@@ -23,7 +23,7 @@ object GameMode {
     val wall = RectWall((10,10,50,10))
     val gp = GoalPool(wall.generate(0, world.toGraph(new BuilderProxy(es))))
     val em = new EntityManager()
-    GameMode(cols, rows, world, es, gp, em, WorldViewer.create(world), 0)
+    GameMode(cols, rows, world, es, gp, em, WorldViewer.create(cols, rows, world), 0)
   }
 }
 
