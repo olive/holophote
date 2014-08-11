@@ -42,6 +42,7 @@ object Worker {
 }
 
 case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], id:Int) {
+  println(goal + " " + order + " " + task)
   def noOrder = order.isNone
   def noTask = task.isNone
   def noGoal = goal.isNone

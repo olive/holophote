@@ -13,17 +13,20 @@ import in.dogue.holophote.blueprints.RectWall
 
 object GameMode {
   def create(cols:Int, rows:Int, r:Random) = {
-    val r = new Random(0)
-    val world = World.create(cols, rows, r)
-    val es = (0 until 3).map { i =>
+    var r = new Random(0)
+    val world = World.create(cols, rows, 6, r)
+    r = new Random(0)
+    val es = (0 until 2).map { i =>
       val x = r.nextInt(cols)
       val y = r.nextInt(rows)
-      Worker.create(cols, rows, (x, y, 0), r)
+      Worker.create(cols, rows, (x, y, 4), r)
     }.toList
     val wall = RectWall((10,10,50,10))
-    val gp = GoalPool(wall.generate(0, world.toGraph(new BuilderProxy(es))))
+    val wall2 = RectWall((11,11,48,8))
+    val wg = world.toGraph(new BuilderProxy(es))
+    val gp = GoalPool(wall.generate(4, wg) ++ wall2.generate(5, wg))
     val em = new EntityManager()
-    GameMode(cols, rows, world, es, gp, em, WorldViewer.create(cols, rows, world), 0)
+    GameMode(cols, rows, world, es, gp, em, WorldViewer.create(cols, rows, world, es), 0)
   }
 }
 
@@ -44,10 +47,10 @@ case class GameMode private (cols:Int, rows:Int, world:World, es:List[Worker], g
 
   def update = {
     val up = updateWorld
-    up.copy(v=v.update(up.world)).toMode
+    up.copy(v=v.update(up.world, up.es)).toMode
   }
   def draw(tr:TileRenderer):TileRenderer = {
-    tr <+< v.draw <++< es.map { _.draw _ }
+    tr <+< v.draw
   }
   def toMode:Mode = Mode[GameMode](_.update, _.draw, this)
 

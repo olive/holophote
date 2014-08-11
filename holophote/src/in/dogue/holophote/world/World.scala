@@ -11,18 +11,21 @@ import in.dogue.holophote.resources.{Resource, Stone}
 import com.deweyvm.gleany.input.MouseHelper
 
 object World {
-  def create(cols:Int, rows:Int, r:Random) = {
-    val tiles = Array3d.tabulate(cols, rows, 1) { case p =>
-      val ttype = Free
-      WorldTile.create(ttype, (r.nextDouble > 0.8).select(0, 1))
+  def create(cols:Int, rows:Int, layers:Int, r:Random) = {
+    val tiles = Array3d.tabulate(cols, rows, layers) { case p =>
+      val ttype =if (p.z > 3) {
+        Free
+      } else {
+        Solid
+      }
+      WorldTile.create(ttype, (r.nextDouble > 0.8 && ttype == Free && p.z == 4).select(0, 1))
     }
     World(tiles)
   }
-  private val dirs = Direction.All.map{ d => d.dx @@ d.dy @@ 0 }
+  private val dirs = Direction3.Planar.map{ d => d.dx @@ d.dy @@ d.dz }
 }
 
 case class World private (tiles:Array3d[WorldTile]) {
-  MouseHelper.wrapper
   val cols = tiles.cols
   val rows = tiles.rows
   val layers = tiles.layers

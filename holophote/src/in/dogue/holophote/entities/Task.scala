@@ -74,7 +74,7 @@ case object Gather extends Task {
 
 case object Drop extends Task {
   override def allowed(b:Worker, p:BuilderProxy, w:World) = {
-    (b.hasStone && w.hasStone(b.pos)).select(TaskUnavailable, TaskAvailable)
+    b.hasStone.select(TaskUnavailable, TaskAvailable)
   }
 
   override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
