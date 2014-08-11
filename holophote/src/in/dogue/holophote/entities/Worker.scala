@@ -9,15 +9,15 @@ import Antiqua._
 import in.dogue.holophote.resources.{Stone, Resource}
 import in.dogue.holophote.world.{ResourceManager, World}
 
-object Builder {
+object Worker {
   var count = 0
   def create(cols:Int, rows:Int, pos:Cell,  r:Random) = {
     val tile = CP437.B.mkTile(Color.Black, Color.White)
     count += 1
-    Builder(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, count)
+    Worker(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, count)
   }
 
-  def performTask(builder:Builder, gp:GoalPool, world:World) = {
+  def performTask(builder:Worker, gp:GoalPool, world:World) = {
     val (b, w) = builder.task.perform(builder, world, gp)
     if (b.task.isNone && !b.goal.isNone && !b.order.isNone) {
       val (no, ntOpt) = b.order.next
@@ -35,13 +35,13 @@ object Builder {
     }
 
   }
-  def finishGoal(b:Builder, gp:GoalPool):(Builder, GoalPool) = {
+  def finishGoal(b:Worker, gp:GoalPool):(Worker, GoalPool) = {
     b.removeGoal @@ gp.finish(b.goal)
   }
 
 }
 
-case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], id:Int) {
+case class Worker(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], id:Int) {
   def noOrder = order.isNone
   def noTask = task.isNone
   def noGoal = goal.isNone
@@ -73,7 +73,7 @@ case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order,
     }
   }
 
-  def update(p:BuilderProxy, w:World, pool:GoalPool): (Builder, GoalPool) = {
+  def update(p:BuilderProxy, w:World, pool:GoalPool): (Worker, GoalPool) = {
     if (noOrder) {
       updateOrder(p, w, pool)
     } else {
@@ -83,13 +83,13 @@ case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order,
 
   def removeGoal = copy(task=task.none, order=order.none, goal=goal.none)
 
-  def setOrder(t:Task, o:Order):Builder = {
+  def setOrder(t:Task, o:Order):Worker = {
     copy(task=t, order=o)
   }
 
   def move(c:Cell) = copy(pos=c)
 
-  def setTask(t:Task):Builder = copy(task=t)
+  def setTask(t:Task):Worker = copy(task=t)
 
   def giveGoal(g:Goal) = copy(goal=g)
 

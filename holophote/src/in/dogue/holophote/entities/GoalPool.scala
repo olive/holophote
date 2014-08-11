@@ -24,7 +24,7 @@ case class GoalPool(goals:List[Goal]) {
     copy(goals=goals.filter { gg => gg != g})
   }
 
-  def giveGoal(b:Builder) = {
+  def giveGoal(b:Worker) = {
     val (bb, gp) = goals.splitFind((g:Goal) => !g.isReserved) match {
       case Some((g, gpp)) =>
         b.giveGoal(g) @@ reserve(g, gpp)

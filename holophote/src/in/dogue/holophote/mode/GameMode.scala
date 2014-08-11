@@ -18,7 +18,7 @@ object GameMode {
     val es = (0 until 3).map { i =>
       val x = r.nextInt(cols)
       val y = r.nextInt(rows)
-      Builder.create(cols, rows, (x, y), r)
+      Worker.create(cols, rows, (x, y), r)
     }.toList
     val wall = RectWall((10,10,50,10))
     val gp = GoalPool(wall.generate(world.toGraph(new BuilderProxy(es))))
@@ -27,12 +27,12 @@ object GameMode {
   }
 }
 
-case class GameMode private (cols:Int, rows:Int, world:World, es:List[Builder], gp:GoalPool, em:EntityManager, t:Int) {
+case class GameMode private (cols:Int, rows:Int, world:World, es:List[Worker], gp:GoalPool, em:EntityManager, t:Int) {
   def update = {
-    if (t % 5 == 0) {
+    if (t % 2 == 0) {
       val (bss, gpp, ww) = em.coordinateTasks(es, gp, world)
       val (bsss, gppp) = bss.fold2(gpp, em.manageGoal)
-      val (updated, newPool) = bsss.foldLeft((List[Builder](), gppp)) { case ((ls, pool), b) =>
+      val (updated, newPool) = bsss.foldLeft((List[Worker](), gppp)) { case ((ls, pool), b) =>
         val (nb, np) = b.update(new BuilderProxy(bsss)/*fixme, use weird fold*/, ww, pool)
         (nb :: ls) @@ np
       }

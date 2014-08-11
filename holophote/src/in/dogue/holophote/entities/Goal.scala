@@ -12,14 +12,14 @@ object Goal {
 }
 
 sealed trait Goal {
-  def toOrder(b:Builder, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]):Option[Order]
+  def toOrder(b:Worker, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]):Option[Order]
   def isReserved:Boolean
   def reserve:Goal
   def free:Goal
   def isNone:Boolean = this == NoGoal
   def none:Goal = NoGoal
   def id:Int
-  def check(b:Builder, w:World):Boolean
+  def check(b:Worker, w:World):Boolean
   override def equals(other:Any):Boolean = {
     if (!other.isInstanceOf[Goal]) {
       return false
@@ -31,11 +31,11 @@ sealed trait Goal {
 
 case object NoGoal extends Goal {
   override val id = -1
-  def toOrder(b:Builder, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]):Option[Order] = None
+  def toOrder(b:Worker, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]):Option[Order] = None
   def isReserved = false
   def reserve = this
   def free = this
-  def check(b:Builder, w:World) = true
+  def check(b:Worker, w:World) = true
 }
 
 object Move {
@@ -49,21 +49,17 @@ case class Move(dst:Cell, r:Boolean, override val id:Int) extends Goal {
   def reserve = copy(r=true)
   def isReserved = r
   def free = copy(r=false)
-  def toOrder(b:Builder, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]) = {
-    val path = Dijkstra.pfind(b.pos, dst, gr)
-    path.map { p =>
-      val first = Path(p)
-      if (b.pos == dst) {
-        None
-      } else {
-        TaskList(List(first)).some
-      }
-
-    }.flatten
+  def toOrder(b:Worker, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]) = {
+    for {
+      path <- Dijkstra.pfind(b.pos, dst, gr)
+      if b.pos != dst
+    } yield {
+      TaskList(List(Path(path)))
+    }
 
   }
 
-  def check(b:Builder, w:World) = {
+  def check(b:Worker, w:World) = {
     b.pos == dst
   }
 }
@@ -79,7 +75,7 @@ case class Build private (adjPos:Cell, dst:Cell, r:Boolean, override val id:Int)
   def reserve = copy(r=true)
   def isReserved = r
   def free = copy(r=false)
-  def toOrder(b:Builder, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]):Option[Order] = {
+  def toOrder(b:Worker, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]):Option[Order] = {
     val isHolding = b.hasStone
     val drop = Drop.onlyIfl(isHolding)
     val isBlocked = rm.isOccupied(dst)
@@ -110,7 +106,7 @@ case class Build private (adjPos:Cell, dst:Cell, r:Boolean, override val id:Int)
 
   }
 
-  def check(b:Builder, w:World) = {
+  def check(b:Worker, w:World) = {
     b.pos == adjPos && w.isSolid(dst)
   }
 }

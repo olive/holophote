@@ -20,7 +20,7 @@ class EntityManager {
     (nv.toList, nb)
   }
 
-  def coordinateTasks(bs:List[Builder], gp:GoalPool, w:World):(List[Builder], GoalPool, World) = {
+  def coordinateTasks(bs:List[Worker], gp:GoalPool, w:World):(List[Worker], GoalPool, World) = {
     var vs = bs.toVector
     var pool = gp
     var world = w
@@ -28,7 +28,7 @@ class EntityManager {
       val b = vs(i)
       b.task.allowed(b, new BuilderProxy(vs), world) match {
         case TaskAvailable =>
-          val (bb, pp, ww) = Builder.performTask(b, pool, world)
+          val (bb, pp, ww) = Worker.performTask(b, pool, world)
           vs = vs.updated(i, bb)
           pool = pp
           world = ww
@@ -61,7 +61,7 @@ class EntityManager {
 
 
 
-  def manageGoal(b:Builder, gp:GoalPool): (Builder, GoalPool) = {
+  def manageGoal(b:Worker, gp:GoalPool): (Worker, GoalPool) = {
     if (b.noGoal) {
       gp.giveGoal(b)
     } else {
