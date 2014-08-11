@@ -39,7 +39,7 @@ case class Path(path:List[Cell]) extends Task {
     val bb = path match {
       case x::xs =>
         b.move(x).setTask(Path(xs))
-      case _ => b.setTask(b.task.none)
+      case Nil => b.setTask(b.task.none)
     }
     bb @@ w
   }

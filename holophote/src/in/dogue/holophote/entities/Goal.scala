@@ -91,6 +91,7 @@ case class Build private (adjPos:Cell, dst:Cell, r:Boolean, override val id:Int)
       }
     }
     if (isHolding) {
+      //fixme -- hack
       for {
         path <- Dijkstra.pfind(b.pos, adjPos, gr).map{_.drop(1)}.map{_.dropRight(1)}
       } yield {

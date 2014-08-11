@@ -29,7 +29,7 @@ object GameMode {
 
 case class GameMode private (cols:Int, rows:Int, world:World, es:List[Builder], gp:GoalPool, em:EntityManager, t:Int) {
   def update = {
-    if (t % 1 == 0) {
+    if (t % 5 == 0) {
       val (bss, gpp, ww) = em.coordinateTasks(es, gp, world)
       val (bsss, gppp) = bss.fold2(gpp, em.manageGoal)
       val (updated, newPool) = bsss.foldLeft((List[Builder](), gppp)) { case ((ls, pool), b) =>

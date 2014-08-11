@@ -2,14 +2,10 @@ package in.dogue.holophote.entities
 
 import in.dogue.antiqua.graphics.{Tile, TileRenderer}
 import scala.util.Random
-import in.dogue.antiqua.Antiqua.Cell
-import in.dogue.antiqua.data.{Direction, FiniteGraph, CP437}
+import in.dogue.antiqua.data.CP437
 import com.deweyvm.gleany.graphics.Color
 import in.dogue.antiqua.Antiqua
 import Antiqua._
-import in.dogue.antiqua.ai.Dijkstra
-import in.dogue.holophote.Holophote
-import Holophote._
 import in.dogue.holophote.resources.{Stone, Resource}
 import in.dogue.holophote.world.{ResourceManager, World}
 
@@ -46,7 +42,6 @@ object Builder {
 }
 
 case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], id:Int) {
-  println(pos + " " + goal + " " + order + " " + task)
   def noOrder = order.isNone
   def noTask = task.isNone
   def noGoal = goal.isNone
@@ -63,6 +58,18 @@ case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order,
         case None =>
           removeGoal @@ pool.surrender(goal)
       }
+    }
+  }
+
+  private def getColor(t:Task) = {
+    t match {
+      case _:Path => Color.Yellow
+      case _:Place => Color.Red
+      case _:Gather.type => Color.Blue
+      case _:Drop.type => Color.Grey
+      case _:MoveTask => Color.Orange
+      case tsk if tsk.isNone => Color.White
+      case _ => Color.Black
     }
   }
 
@@ -88,6 +95,6 @@ case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order,
 
 
   def draw(tr:TileRenderer):TileRenderer = {
-    tr <+ (pos, tile)
+    tr <+ (pos, tile.setFg(getColor(task)))
   }
 }
