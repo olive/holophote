@@ -29,7 +29,7 @@ case class Path(path:List[Cell]) extends Task {
       path.headOption.map {
         c => p.getOccupant(c)
       }.flatten match {
-        case Some(b) => TaskBlocked(b)
+        case Some(bb) => TaskBlocked(bb)
         case None => TaskAvailable
       }
     }
@@ -62,13 +62,40 @@ case class Place(c:Cell) extends Task {
 }
 
 
-case class Gather(c:Cell) extends Task {
+case object Gather extends Task {
   override def allowed(b:Builder, p:BuilderProxy, w:World) = {
-    (b.invFree && b.pos == c && w.hasStone(b.pos)).select(TaskUnavailable, TaskAvailable)
+    (b.invFree && w.hasStone(b.pos)).select(TaskUnavailable, TaskAvailable)
   }
 
   override def perform(b:Builder, w:World, gp:GoalPool):(Builder, World) = {
     (b.setTask(b.task.none).give(Stone), w.removeResource(b.pos, Stone))
+  }
+}
+
+case object Drop extends Task {
+  override def allowed(b:Builder, p:BuilderProxy, w:World) = {
+    (b.hasStone && w.hasStone(b.pos)).select(TaskUnavailable, TaskAvailable)
+  }
+
+  override def perform(b:Builder, w:World, gp:GoalPool):(Builder, World) = {
+    val newW = b.inv.map{ r => w.addResource(b.pos, r)}.getOrElse(w)
+    (b.setTask(b.task.none).spendStone, newW)
+  }
+}
+case class MoveTask(dst:Cell) extends Task {
+  override def allowed(b:Builder, p:BuilderProxy, w:World) = {
+    if ((b.pos |-| dst).mag != 1 || w.isSolid(dst)) {
+      TaskUnavailable
+    } else {
+      p.getOccupant(dst) match {
+        case Some(blk) => TaskBlocked(blk)
+        case None => TaskAvailable
+      }
+    }
+  }
+
+  override def perform(b:Builder, w:World, gp:GoalPool):(Builder, World) = {
+    (b.setTask(b.task.none).move(dst), w)
   }
 }
 

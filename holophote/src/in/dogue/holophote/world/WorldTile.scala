@@ -25,7 +25,9 @@ object WorldTile {
 case class WorldTile private (ttype:TileType, items:Seq[Resource]) {
   def isWalkable:Boolean = ttype == Free
   def isSolid:Boolean = !isWalkable
-  def remove(r:Resource) = ???
+  def hasStone = items.contains(Stone)
+  def remove(r:Resource) = copy(items=items.drop(1))//fixme, remove only r's
+  def add(r:Resource) = copy(items=items :+ r)
   def draw(c:Cell)(tr:TileRenderer):TileRenderer = {
     val tile = ttype match {
       case Solid => CP437.`#`.mkTile(Color.Black, Color.White)

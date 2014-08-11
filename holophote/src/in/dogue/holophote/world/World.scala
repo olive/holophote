@@ -34,6 +34,7 @@ case class World private (tiles:Array2d[WorldTile], allCells:Seq[Cell]) {
     }
     def getAll = all
   }
+  def addResource(c:Cell, r:Resource) = copy(tiles=tiles.update(c, _.add(r)))
   def removeResource(c:Cell, r:Resource) = copy(tiles=tiles.update(c, _.remove(r)))
   def hasStone(c:Cell) = tiles.getOption(c).exists(t => t.items.contains(Stone))
   def buildAt(c:Cell) = copy(tiles=tiles.updated(c, WorldTile.create(Solid, 0)))

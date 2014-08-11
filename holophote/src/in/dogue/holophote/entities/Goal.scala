@@ -3,7 +3,7 @@ package in.dogue.holophote.entities
 import in.dogue.antiqua.Antiqua.Cell
 import in.dogue.antiqua.data.FiniteGraph
 import in.dogue.antiqua.ai.Dijkstra
-import in.dogue.holophote.world.World
+import in.dogue.holophote.world.{ResourceManager, World}
 import in.dogue.antiqua.Antiqua
 import Antiqua._
 
@@ -12,7 +12,7 @@ object Goal {
 }
 
 sealed trait Goal {
-  def toOrder(b:Builder, gr:FiniteGraph[Cell,Cell]):Option[Order]
+  def toOrder(b:Builder, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]):Option[Order]
   def isReserved:Boolean
   def reserve:Goal
   def free:Goal
@@ -31,7 +31,7 @@ sealed trait Goal {
 
 case object NoGoal extends Goal {
   override val id = -1
-  def toOrder(b:Builder, gr:FiniteGraph[Cell,Cell]):Option[Order] = None
+  def toOrder(b:Builder, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]):Option[Order] = None
   def isReserved = false
   def reserve = this
   def free = this
@@ -49,7 +49,7 @@ case class Move(dst:Cell, r:Boolean, override val id:Int) extends Goal {
   def reserve = copy(r=true)
   def isReserved = r
   def free = copy(r=false)
-  def toOrder(b:Builder, gr:FiniteGraph[Cell,Cell]) = {
+  def toOrder(b:Builder, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]) = {
     val path = Dijkstra.pfind(b.pos, dst, gr)
     path.map { p =>
       val first = Path(p)
@@ -79,17 +79,32 @@ case class Build private (adjPos:Cell, dst:Cell, r:Boolean, override val id:Int)
   def reserve = copy(r=true)
   def isReserved = r
   def free = copy(r=false)
-  def toOrder(b:Builder, gr:FiniteGraph[Cell,Cell]) = {
-    val path = Dijkstra.pfind(b.pos, adjPos, gr)
-    path.map { p =>
-      val first = Path(p.drop(1))
-      val second = Place(dst)
-      if (b.pos == adjPos) {
-        TaskList(List(second))
-      } else {
-        TaskList(List(first, second))
+  def toOrder(b:Builder, rm:ResourceManager, gr:FiniteGraph[Cell,Cell]):Option[Order] = {
+    val isHolding = b.hasStone
+    val drop = Drop.onlyIfl(isHolding)
+    val isBlocked = rm.isOccupied(dst)
+    if (isBlocked) {
+      return for {
+        path <- Dijkstra.pfind(b.pos, dst, gr).map{_.drop(1)}
+      } yield {
+        TaskList(drop ++ List(Path(path), Gather, MoveTask(adjPos), Place(dst)))
+      }
+    }
+    if (isHolding) {
+      for {
+        path <- Dijkstra.pfind(b.pos, adjPos, gr).map{_.drop(1)}.map{_.dropRight(1)}
+      } yield {
+        TaskList(List(Path(path), MoveTask(adjPos), Place(dst)))
       }
 
+    } else {
+      for {
+        p <- rm.nearest(dst)
+        path1 <- Dijkstra.pfind(b.pos, p, gr).map{_.drop(1)}
+        path2 <- Dijkstra.pfind(p, adjPos, gr)
+      } yield {
+        TaskList(List(Path(path1), Gather, Path(path2), Place(dst)))
+      }
     }
 
   }

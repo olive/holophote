@@ -11,7 +11,7 @@ import in.dogue.antiqua.ai.Dijkstra
 import in.dogue.holophote.Holophote
 import Holophote._
 import in.dogue.holophote.resources.{Stone, Resource}
-import in.dogue.holophote.world.World
+import in.dogue.holophote.world.{ResourceManager, World}
 
 object Builder {
   var count = 0
@@ -30,7 +30,7 @@ object Builder {
           b.setOrder(t, no) @@ gp @@ w
         case None =>
           if (!b.goal.check(b, w)) {
-            throw new RuntimeException()
+            throw new RuntimeException("Postcondition was not met\n%s\n%s".format(b.pos, b.goal))
           }
           finishGoal(b, gp) @@ w
       }
@@ -46,6 +46,7 @@ object Builder {
 }
 
 case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], id:Int) {
+  println(pos + " " + goal + " " + order + " " + task)
   def noOrder = order.isNone
   def noTask = task.isNone
   def noGoal = goal.isNone
@@ -57,7 +58,7 @@ case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order,
     if (goal.isNone) {
       this @@ pool
     } else {
-      goal.toOrder(this, w.toGraph(p)) match {
+      goal.toOrder(this, new ResourceManager(w), w.toGraph(p)) match {
         case Some(ord) => copy(order = ord) @@ pool
         case None =>
           removeGoal @@ pool.surrender(goal)
