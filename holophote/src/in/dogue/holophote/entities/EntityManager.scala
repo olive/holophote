@@ -3,12 +3,10 @@ package in.dogue.holophote.entities
 import in.dogue.antiqua.Antiqua
 import Antiqua._
 import in.dogue.holophote.world.World
-import in.dogue.antiqua.data.Direction
+import in.dogue.antiqua.data.{Direction3}
 import scala.util.Random
 
 class EntityManager {
-
-
 
 
   def weirdFold[T,B](s:List[T], init:B, f:(T,List[T], B) => (T,B)) = {
@@ -34,7 +32,7 @@ class EntityManager {
           world = ww
         case TaskBlocked(blocker) =>
           val k = vs.indexOf(blocker)
-          val d = Direction.All.randomR(new Random(0))
+          val d = Direction3.Planar.randomR(new Random(0))
           val (blk, pp) = blocker.removeGoal.giveGoal(Move.create(blocker.pos --> d --> d)).update(new BuilderProxy(vs), world, pool)
           pool = pp
           vs = vs.updated(k, blk)
@@ -44,21 +42,10 @@ class EntityManager {
         case TaskUnavailable =>
           vs = vs.updated(i, b.removeGoal)
           pool = pool.surrender(b.goal)
-          //world = w
       }
     }
     (vs.toList, pool, world)
   }
-
-
-  //def manageTask(b:Builder, bs:Seq[Builder], gp:GoalPool, w:World):(Builder, GoalPool, World) = {
-  //  if (b.task.allowed(b, new BuilderProxy(bs), w)) {
-  //    Builder.performTask(b, gp, w)
-  //  } else {
-  //    b.removeGoal @@ b.goal.map{g => gp.surrender(g) }.getOrElse(gp) @@ w
-  //  }
-  //}
-
 
 
   def manageGoal(b:Worker, gp:GoalPool): (Worker, GoalPool) = {

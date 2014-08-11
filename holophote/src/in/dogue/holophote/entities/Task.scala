@@ -19,7 +19,7 @@ sealed trait Task {
   def allowed(b:Worker, p:BuilderProxy, w:World):TaskResult = TaskAvailable
   def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = (b, w)
 }
-case class Path(path:List[Cell]) extends Task {
+case class Path(path:List[Vox]) extends Task {
   override def allowed(b:Worker, p:BuilderProxy, w:World) = {
     if (path.isEmpty) {
       TaskAvailable
@@ -44,7 +44,7 @@ case class Path(path:List[Cell]) extends Task {
     bb @@ w
   }
 }
-case class Place(c:Cell) extends Task {
+case class Place(c:Vox) extends Task {
   override def allowed(b:Worker, p:BuilderProxy, w:World) = {
     p.getOccupant(c) match {
       case Some(bb) => TaskBlocked(bb)
@@ -82,7 +82,7 @@ case object Drop extends Task {
     (b.setTask(b.task.none).spendStone, newW)
   }
 }
-case class MoveTask(dst:Cell) extends Task {
+case class MoveTask(dst:Vox) extends Task {
   override def allowed(b:Worker, p:BuilderProxy, w:World) = {
     if ((b.pos |-| dst).mag != 1 || w.isSolid(dst)) {
       TaskUnavailable

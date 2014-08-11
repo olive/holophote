@@ -11,7 +11,7 @@ import in.dogue.holophote.world.{ResourceManager, World}
 
 object Worker {
   var count = 0
-  def create(cols:Int, rows:Int, pos:Cell,  r:Random) = {
+  def create(cols:Int, rows:Int, pos:Vox,  r:Random) = {
     val tile = CP437.B.mkTile(Color.Black, Color.White)
     count += 1
     Worker(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, count)
@@ -41,7 +41,7 @@ object Worker {
 
 }
 
-case class Worker(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], id:Int) {
+case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], id:Int) {
   def noOrder = order.isNone
   def noTask = task.isNone
   def noGoal = goal.isNone
@@ -87,7 +87,7 @@ case class Worker(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, 
     copy(task=t, order=o)
   }
 
-  def move(c:Cell) = copy(pos=c)
+  def move(c:Vox) = copy(pos=c)
 
   def setTask(t:Task):Worker = copy(task=t)
 
@@ -95,6 +95,6 @@ case class Worker(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, 
 
 
   def draw(tr:TileRenderer):TileRenderer = {
-    tr <+ (pos, tile.setFg(getColor(task)))
+    tr <+ (pos.xy, tile.setFg(getColor(task)))
   }
 }
