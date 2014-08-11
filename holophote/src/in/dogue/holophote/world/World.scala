@@ -8,6 +8,7 @@ import in.dogue.antiqua.Antiqua
 import Antiqua._
 import in.dogue.holophote.entities.BuilderProxy
 import in.dogue.holophote.resources.{Resource, Stone}
+import com.deweyvm.gleany.input.MouseHelper
 
 object World {
   def create(cols:Int, rows:Int, r:Random) = {
@@ -21,8 +22,10 @@ object World {
 }
 
 case class World private (tiles:Array3d[WorldTile]) {
+  MouseHelper.wrapper
   val cols = tiles.cols
   val rows = tiles.rows
+  val layers = tiles.layers
   def toGraph(es:BuilderProxy):Graph[Vox,Vox] = new Graph[Vox,Vox] {
     val dirs = World.dirs
     def get(c:Vox) = c
@@ -36,7 +39,5 @@ case class World private (tiles:Array3d[WorldTile]) {
   def hasStone(c:Vox) = tiles.getOption(c).exists(t => t.items.contains(Stone))
   def buildAt(c:Vox) = copy(tiles=tiles.updated(c, WorldTile.create(Solid, 0)))
   def isSolid(c:Vox):Boolean = tiles.getOption(c).exists(_.isSolid)
-  def draw(tr:TileRenderer):TileRenderer = {
-    tr <++< tiles.vs(0).flatten.map { case (p, t) => t.draw(p) _ }
-  }
+
 }

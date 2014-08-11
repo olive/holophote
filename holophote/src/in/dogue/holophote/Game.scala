@@ -15,8 +15,8 @@ object Game {
 class Game(initializer: GleanyInitializer) extends GleanyGame(initializer) {
   private lazy val engine = new Engine()
   override def update() {
-    Controls.update()
     engine.update()
+    Controls.update()
     Game.t += 1
   }
 
