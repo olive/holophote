@@ -23,15 +23,23 @@ object GameMode {
     val wall = RectWall((10,10,50,10))
     val gp = GoalPool(wall.generate(world.toGraph(new BuilderProxy(es))))
     val em = new EntityManager()
-    GameMode(cols, rows, world, es, gp, em)
+    GameMode(cols, rows, world, es, gp, em, 0)
   }
 }
 
-case class GameMode private (cols:Int, rows:Int, world:World, es:List[Builder], gp:GoalPool, em:EntityManager) {
+case class GameMode private (cols:Int, rows:Int, world:World, es:List[Builder], gp:GoalPool, em:EntityManager, t:Int) {
   def update = {
-    val (bss, gpp, ww) = em.coordinateTasks(es, gp, world)
-    val (bsss, gppp) = bss.fold2(gpp, em.manageGoal)
-    copy(es=bsss.map{_.update(new BuilderProxy(bsss)/*fixme, doesnt account for movement along the way!*/, world)}, world=ww, gp=gppp).toMode
+    if (t % 1 == 0) {
+      val (bss, gpp, ww) = em.coordinateTasks(es, gp, world)
+      val (bsss, gppp) = bss.fold2(gpp, em.manageGoal)
+      val (updated, newPool) = bsss.foldLeft((List[Builder](), gppp)) { case ((ls, pool), b) =>
+        val (nb, np) = b.update(new BuilderProxy(bsss)/*fixme, use weird fold*/, ww, pool)
+        (nb :: ls) @@ np
+      }
+      copy(es = updated, world = ww, gp = newPool, t=t+1).toMode
+    } else {
+      copy(t=t+1).toMode
+    }
   }
   def draw(tr:TileRenderer):TileRenderer = {
     tr <+< world.draw <++< es.map { _.draw _ }

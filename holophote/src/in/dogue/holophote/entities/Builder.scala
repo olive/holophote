@@ -18,18 +18,18 @@ object Builder {
   def create(cols:Int, rows:Int, pos:Cell,  r:Random) = {
     val tile = CP437.B.mkTile(Color.Black, Color.White)
     count += 1
-    Builder(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Seq(Stone, Stone, Stone), count)
+    Builder(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, count)
   }
 
   def performTask(builder:Builder, gp:GoalPool, world:World) = {
     val (b, w) = builder.task.perform(builder, world, gp)
-    if (b.task.isNone) {
+    if (b.task.isNone && !b.goal.isNone && !b.order.isNone) {
       val (no, ntOpt) = b.order.next
       ntOpt match {
         case Some(t) =>
           b.setOrder(t, no) @@ gp @@ w
         case None =>
-          if (b.hasGoal && !b.goal.check(b, w)) {
+          if (!b.goal.check(b, w)) {
             throw new RuntimeException()
           }
           finishGoal(b, gp) @@ w
@@ -40,34 +40,40 @@ object Builder {
 
   }
   def finishGoal(b:Builder, gp:GoalPool):(Builder, GoalPool) = {
-    b.removeGoal @@ b.goal.map {g => gp.finish(g)}.getOrElse(gp)
+    b.removeGoal @@ gp.finish(b.goal)
   }
 
 }
 
-case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Seq[Resource], id:Int) {
+case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], id:Int) {
   def noOrder = order.isNone
   def noTask = task.isNone
-  def noGoal = goal.isEmpty
-
-  private def updateOrder(p:BuilderProxy, w:World) = {
-    goal match {
-      case Some(g) =>
-        val ord = g.toOrder(this, w.toGraph(p)).getOrElse(order.none)
-        copy(order=ord)
-      case _ => this
-    }
-  }
-
-  def update(p:BuilderProxy, w:World) = {
-    if (noOrder) {
-      updateOrder(p, w)
+  def noGoal = goal.isNone
+  def invFree = inv.isEmpty
+  def give(r:Resource) = copy(inv = r.some)
+  def hasStone = inv == Some(Stone)
+  def spendStone = copy(inv=None)
+  private def updateOrder(p:BuilderProxy, w:World, pool:GoalPool) = {
+    if (goal.isNone) {
+      this @@ pool
     } else {
-      this
+      goal.toOrder(this, w.toGraph(p)) match {
+        case Some(ord) => copy(order = ord) @@ pool
+        case None =>
+          removeGoal @@ pool.surrender(goal)
+      }
     }
   }
 
-  def removeGoal = copy(task=task.none, order=order.none, goal=None)
+  def update(p:BuilderProxy, w:World, pool:GoalPool): (Builder, GoalPool) = {
+    if (noOrder) {
+      updateOrder(p, w, pool)
+    } else {
+      this @@ pool
+    }
+  }
+
+  def removeGoal = copy(task=task.none, order=order.none, goal=goal.none)
 
   def setOrder(t:Task, o:Order):Builder = {
     copy(task=t, order=o)
@@ -77,7 +83,7 @@ case class Builder(pos:Cell, tile:Tile, r:Random, t:Int, task:Task, order:Order,
 
   def setTask(t:Task):Builder = copy(task=t)
 
-  def giveGoal(g:Goal) = copy(goal=g.some)
+  def giveGoal(g:Goal) = copy(goal=g)
 
 
   def draw(tr:TileRenderer):TileRenderer = {

@@ -3,6 +3,8 @@ package in.dogue.holophote.entities
 import in.dogue.antiqua.Antiqua
 import Antiqua._
 import in.dogue.holophote.world.World
+import in.dogue.antiqua.data.Direction
+import scala.util.Random
 
 class EntityManager {
 
@@ -24,15 +26,25 @@ class EntityManager {
     var world = w
     for (i <- 0 until vs.length) {
       val b = vs(i)
-      if (b.task.allowed(b, new BuilderProxy(vs), world)) {
-        val (bb, pp, ww) = Builder.performTask(b, pool, world)
-        vs = vs.updated(i, bb)
-        pool = pp
-        world = ww
-      } else {
-        vs = vs.updated(i, b.removeGoal)
-        pool = b.goal.map{g => pool.surrender(g) }.getOrElse(throw new RuntimeException())
-        world = w
+      b.task.allowed(b, new BuilderProxy(vs), world) match {
+        case TaskAvailable =>
+          val (bb, pp, ww) = Builder.performTask(b, pool, world)
+          vs = vs.updated(i, bb)
+          pool = pp
+          world = ww
+        case TaskBlocked(blocker) =>
+          val k = vs.indexOf(blocker)
+          val d = Direction.All.randomR(new Random(0))
+          val (blk, pp) = blocker.removeGoal.giveGoal(Move.create(blocker.pos --> d --> d)).update(new BuilderProxy(vs), world, pool)
+          pool = pp
+          vs = vs.updated(k, blk)
+          pool = pool.surrender(blocker.goal)
+          vs = vs.updated(i, b.removeGoal)
+          pool = pool.surrender(b.goal)
+        case TaskUnavailable =>
+          vs = vs.updated(i, b.removeGoal)
+          pool = pool.surrender(b.goal)
+          //world = w
       }
     }
     (vs.toList, pool, world)
