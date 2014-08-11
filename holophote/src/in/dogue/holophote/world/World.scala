@@ -1,6 +1,6 @@
 package in.dogue.holophote.world
 
-import in.dogue.antiqua.data.{Graph, Direction, FiniteGraph, Array2d}
+import in.dogue.antiqua.data._
 import in.dogue.antiqua.Antiqua.Cell
 import scala.util.Random
 import in.dogue.antiqua.graphics.TileRenderer
@@ -8,7 +8,6 @@ import in.dogue.antiqua.Antiqua
 import Antiqua._
 import in.dogue.holophote.entities.BuilderProxy
 import in.dogue.holophote.resources.{Resource, Stone}
-import in.dogue.holophote.data.Array3d
 
 object World {
   def create(cols:Int, rows:Int, r:Random) = {
