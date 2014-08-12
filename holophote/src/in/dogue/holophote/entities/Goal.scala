@@ -129,20 +129,21 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
 }
 
 object Stock {
-  def create(pt:Vox, from:Vox) = {
+  def create(tok:Int, to:(Int,Int,Int,Int), from:Vox) = {
     Goal.id += 1
-    Stock(from, pt, Goal.id)
+    Stock(from, tok, to, Goal.id)
   }
 }
 
-case class Stock private (from:Vox, pt:Vox, override val id:Int) extends Goal {
+case class Stock private (from:Vox, tok:Int, to:(Int,Int,Int,Int), override val id:Int) extends Goal {
   def reserve = this
   def isReserved = false
   def free = this
   def toOrder(b:Worker, rm:ResourceManager, gr:Graph[Vox,Vox]):FailureReason \/ Order = {
     if (b.hasStone) {
       for {
-        path <- Holophote.pfind(b.pos, pt, gr)
+        p <- rm.sparse(tok, to)
+        path <- Holophote.pfind(b.pos, p, gr)
       } yield {
         TaskList(List(Path(path), Drop))
       }
@@ -162,7 +163,7 @@ case class Stock private (from:Vox, pt:Vox, override val id:Int) extends Goal {
   }
 
   def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
-    w.isStandable(pt) && w.isStandable(from)
+    w.isStandable(from) //&& to.exists{ case p => w.isStandable(p) }
   }
 }
 

@@ -8,7 +8,7 @@ import Antiqua._
 
 case class RectWall(from:Vox, k:Int, r:(Int,Int,Int,Int)) {
   self =>
-  val resourcePoint = (r._1+r._3/2, r._2+r._4/2, k)
+  val to = (r._1+1, r._2+1, r._3-2,r._4-2)
   def generate(g:Graph[Vox,Vox]) = {
     val cols = r._3
     val rows = r._4
@@ -35,7 +35,7 @@ case class RectWall(from:Vox, k:Int, r:(Int,Int,Int,Int)) {
 
     val major = Map[Job, List[Goal]](Builder -> list).withDefaultValue(List())
     val minor = Map[Job, List[Goal]](
-      Gatherer -> List(Stock.create(resourcePoint, from))
+      Gatherer -> List(Stock.create(k, to, from))
 
     ).withDefaultValue(List())
     major @@ minor

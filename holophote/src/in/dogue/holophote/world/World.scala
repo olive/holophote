@@ -67,6 +67,17 @@ case class World private (tiles:Array3d[WorldTile]) {
       ns
     }
   }
+
+  def countStone(c:Vox):Option[Int] = {
+    tiles.getOption(c).map{_.countStone}
+  }
+  def traceDown(c:Vox):Vox = {
+    if (isStandable(c) || c.z == 0) {
+      c
+    } else {
+      traceDown(c --> Downward)
+    }
+  }
   def addResource(c:Vox, r:Resource) = copy(tiles=tiles.update(c, _.add(r)))
   def removeResource(c:Vox, r:Resource) = copy(tiles=tiles.update(c, _.remove(r)))
   def hasStone(c:Vox) = tiles.getOption(c).exists(t => t.items.contains(Stone))

@@ -32,6 +32,7 @@ case class WorldTile private (ttype:TileType, bodyTile:Tile, floorTile:Tile, ite
   def isStair = ttype == Stair
   def hasStone = items.contains(Stone)
   def isFree = ttype == Free
+  def countStone = items.length
   def remove(r:Resource) = copy(items=items.drop(1))//fixme, remove only r's
   def add(r:Resource) = copy(items=items :+ r)
   def draw(c:Cell, below:Option[WorldTile])(tr:TileRenderer):TileRenderer = {
