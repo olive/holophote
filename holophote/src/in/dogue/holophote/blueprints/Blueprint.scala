@@ -26,7 +26,11 @@ case class RectWall(r:(Int,Int,Int,Int)) {
           p +| 1
         }
       (p, adj)
-    }).sortBy { case (p, adj) => math.atan2(p.y - r._2 - rows/2, p.x - r._1 - cols/2)}.map { case (p, adj) => Build.create(adj @@ k, p @@ k) }.toList
+    }).sortBy { case (p, adj) =>
+      math.atan2(p.y - r._2 - rows/2, p.x - r._1 - cols/2)
+    }.map { case (p, adj) =>
+      Build.create(adj @@ k, p @@ k)
+    }.toList
   }
 
   def toBlueprint(k:Int) = new Blueprint {

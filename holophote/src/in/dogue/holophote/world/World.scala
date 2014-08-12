@@ -33,8 +33,20 @@ case class World private (tiles:Array3d[WorldTile]) {
     val dirs = World.dirs
     def get(c:Vox) = c
     def getNeighbors(c:Vox) = {
-      def get(t:Vox) = t.onlyIfs(t.xy.inRange((0,0, cols, rows)) && !isSolid(t) && !es.isOccupied(t))
-      dirs.map( p=> get(p |+| c)).flatten
+
+      def inRange(t:Vox) = t.xy.inRange((0,0,cols,rows)) && t.z >= 0 && t.z <= layers - 1
+      def get(t:Vox) = t.onlyIfs(inRange(t) && !isSolid(t) && isSolid(t -->Downward) && !es.isOccupied(t))
+      val up = dirs.map{ p =>
+        val upw = (p |+| c) --> Upward
+        val ups = upw.onlyIfs(inRange(upw) && !isSolid(upw) && isSolid(p |+| c) && !es.isOccupied(upw))
+        ups
+      }
+      val down = dirs.map{ p =>
+        val dw = (p |+| c) --> Downward
+        dw.onlyIfs(inRange(dw) && !isSolid(dw) && isSolid(dw --> Downward) && !isSolid(p |+| c) && !es.isOccupied(dw))
+      }
+      val ns = dirs.map( p=> get(p |+| c)).flatten ++ up.flatten ++ down.flatten
+      ns
     }
   }
   def addResource(c:Vox, r:Resource) = copy(tiles=tiles.update(c, _.add(r)))

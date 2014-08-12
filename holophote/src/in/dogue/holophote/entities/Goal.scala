@@ -93,7 +93,7 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
       }
 
     } else {
-      println("not holding " + b.pos + " --> " + rm.nearest(dst))
+      //println("not holding " + b.pos + " --> " + rm.nearest(dst))
       for {
         p <- rm.nearest(dst)
         path1 <- Holophote.pfind(b.pos, p, gr).map{_.drop(1)}

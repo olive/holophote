@@ -14,17 +14,20 @@ import in.dogue.holophote.blueprints.RectWall
 object GameMode {
   def create(cols:Int, rows:Int, r:Random) = {
     var r = new Random(0)
-    val world = World.create(cols, rows, 6, r)
+    val world = World.create(cols, rows, 10, r)
     r = new Random(0)
-    val es = (0 until 2).map { i =>
+    val es = (0 until 3).map { i =>
       val x = r.nextInt(cols)
       val y = r.nextInt(rows)
       Worker.create(cols, rows, (x, y, 4), r)
     }.toList
-    val wall = RectWall((10,10,50,10))
-    val wall2 = RectWall((11,11,48,8))
     val wg = world.toGraph(new BuilderProxy(es))
-    val gp = GoalPool(wall.generate(4, wg) ++ wall2.generate(5, wg))
+    val wall = RectWall((10,10,10,10)).generate(4, wg)
+    val wall2 = RectWall((11,11,8,8)).generate(5, wg)
+    val wall3 = RectWall((12,12,6,6)).generate(6, wg)
+    val wall4 = RectWall((13,13,4,4)).generate(7, wg)
+    val wall5 = RectWall((14,14,2,2)).generate(8, wg)
+    val gp = GoalPool(wall ++ wall2 ++ wall3 ++ wall4 ++ wall5)
     val em = new EntityManager()
     GameMode(cols, rows, world, es, gp, em, WorldViewer.create(cols, rows, world, es), 0)
   }
