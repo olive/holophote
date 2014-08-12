@@ -42,7 +42,7 @@ object Worker {
 }
 
 case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], job:Job, id:Int) {
-  println(goal + " " + order + " " + task)
+  println(job + " " + goal + " " + order + " " + task)
   def noOrder = order.isNone
   def noTask = task.isNone
   def noGoal = goal.isNone
@@ -58,7 +58,6 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
         case Some(ord) =>
           copy(order = ord) @@ pool
         case None =>
-          println("failed to get orders")
           removeGoal @@ pool.surrender(job, goal)
       }
     }

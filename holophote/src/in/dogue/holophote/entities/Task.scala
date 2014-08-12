@@ -29,8 +29,8 @@ case class Path(path:List[Vox]) extends Task {
       path.headOption.map {
         c => p.getOccupant(c)
       }.flatten match {
-        case Some(bb) => TaskBlocked(bb)
-        case None => TaskAvailable
+        case Some(bb) if bb.pos != b.pos => TaskBlocked(bb)
+        case _ => TaskAvailable
       }
     }
 
@@ -47,8 +47,8 @@ case class Path(path:List[Vox]) extends Task {
 case class Place(c:Vox) extends Task {
   override def allowed(b:Worker, p:BuilderProxy, w:World) = {
     p.getOccupant(c) match {
-      case Some(bb) => TaskBlocked(bb)
-      case None =>
+      case Some(bb) if bb.pos != b.pos => TaskBlocked(bb)
+      case _ =>
         if ((b.pos |-| c).mag2 == 1 && !w.isSolid(c) && b.hasStone) {
           TaskAvailable
         } else {
@@ -88,8 +88,8 @@ case class MoveTask(dst:Vox) extends Task {
       TaskUnavailable
     } else {
       p.getOccupant(dst) match {
-        case Some(blk) => TaskBlocked(blk)
-        case None => TaskAvailable
+        case Some(blk) if blk.pos != b.pos => TaskBlocked(blk)
+        case _ => TaskAvailable
       }
     }
   }

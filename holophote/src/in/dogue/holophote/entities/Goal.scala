@@ -52,7 +52,7 @@ case class Move(dst:Vox, r:Boolean, override val id:Int) extends Goal {
   def free = copy(r=false)
   def toOrder(b:Worker, rm:ResourceManager, gr:Graph[Vox,Vox]) = {
     for {
-      path <- Holophote.pfind(b.pos, dst, gr)
+      path <- Holophote.pfind(b.pos, dst, gr).map{_.drop(1)}
       if b.pos != dst
     } yield {
       TaskList(List(Path(path)))
@@ -92,7 +92,6 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
       }
     }
     if (isHolding) {
-      println("holding stone " + b.pos + " --> " + adjPos)
       for {
         path <- Holophote.pfind(b.pos, adjPos, gr).map{_.drop(1)}
       } yield {
@@ -100,7 +99,6 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
       }
 
     } else {
-      println("not holding " + b.pos + " --> " + rm.nearest(dst))
       for {
         p <- rm.nearest(dst)
         path1 <- Holophote.pfind(b.pos, p, gr).map{_.drop(1)}
@@ -117,10 +115,45 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
   }
 
   def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
-    w.isSolid(adjPos --> Downward ) && !w.isSolid(dst)
+    w.isSolid(adjPos --> Downward) && !w.isSolid(dst)
   }
 }
 
+object Stock {
+  def create(pt:Vox, from:Vox) = {
+    Goal.id += 1
+    Stock(from, pt, Goal.id)
+  }
+}
+
+case class Stock private (from:Vox, pt:Vox, override val id:Int) extends Goal {
+  def reserve = this
+  def isReserved = false
+  def free = this
+  def toOrder(b:Worker, rm:ResourceManager, gr:Graph[Vox,Vox]):Option[Order] = {
+    for {
+      p <- rm.nearest(from) if p != pt
+      path1 <- Holophote.pfind(b.pos, p, gr).map{_.drop(1)}
+      path2 <- Holophote.pfind(p, pt, gr)
+    } yield {
+      //for simplicity
+      val l1 = if (b.hasStone) {
+        List(Drop)
+      } else {
+        List()
+      }
+      TaskList(l1 ++ List(Path(path1), Gather, Path(path2), Drop))
+    }
+  }
+
+  def check(b:Worker, w:World) = {
+    !w.isSolid(pt)
+  }
+
+  def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
+    w.isSolid(pt --> Downward) && !w.isSolid(pt)
+  }
+}
 
 
 
