@@ -124,7 +124,7 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
   }
 
   def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
-    w.hasFloor(adjPos) && !w.isSolid(dst)
+    w.isStandable(adjPos) && !w.isSolid(dst)
   }
 }
 
@@ -158,15 +158,45 @@ case class Stock private (from:Vox, pt:Vox, override val id:Int) extends Goal {
   }
 
   def check(b:Worker, w:World) = {
-    w.hasStone(pt)
+    true
   }
 
   def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
-    w.hasFloor(pt) && w.hasFloor(from)
+    w.isStandable(pt) && w.isStandable(from)
   }
 }
 
+sealed trait DigType
+case class Stair(pt:Vox) extends DigType
+case object Tunnel extends DigType
 
+object Dig {
+  def create(pt:Vox, dt:DigType) = {
+    Goal.id += 1
+    Dig(pt, dt, Goal.id)
+  }
+}
+
+case class Dig private (pt:Vox, dt:DigType, override val id:Int) extends Goal {
+  def reserve = this
+  def isReserved = false
+  def free = this
+  def toOrder(b:Worker, rm:ResourceManager, gr:Graph[Vox,Vox]):FailureReason \/ Order = {
+    -\/(FailureReason.Unknown)
+
+  }
+
+  def check(b:Worker, w:World) = {
+    dt match {
+      case Stair(t) => w.isStair(t)
+      case Tunnel => w.isPassable(pt)
+    }
+  }
+
+  def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
+    ???
+  }
+}
 
 
 

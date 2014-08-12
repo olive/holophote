@@ -36,7 +36,10 @@ case class RectWall(from:Vox, k:Int, r:(Int,Int,Int,Int)) {
     }.toList
 
     val major = Map[Job, List[Goal]](Builder -> list).withDefaultValue(List())
-    val minor = Map[Job, List[Goal]](Gatherer -> List(Stock.create(resourcePoint, from))).withDefaultValue(List())
+    val minor = Map[Job, List[Goal]](
+      Gatherer -> List(Stock.create(resourcePoint, from))
+
+    ).withDefaultValue(List())
     major @@ minor
   }
 

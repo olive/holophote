@@ -18,6 +18,7 @@ object Worker {
       case Builder => CP437.B
       case Supervisor => CP437.S
       case Gatherer => CP437.G
+      case Miner => CP437.M
     }
     val tile = code.mkTile(Color.Black, Color.White)
     count += 1
@@ -73,9 +74,9 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
   private def getColor(t:Task) = {
     t match {
       case _:Path => Color.Yellow
-      case _:Place => Color.Red
+      case _:Place | _:BuildStair => Color.Red
       case _:Gather.type => Color.Blue
-      case _:Drop.type => Color.Grey
+      case _:Drop.type | _:DigStair => Color.Grey
       case _:MoveTask => Color.Orange
       case tsk if tsk.isNone => Color.White
       case _ => Color.Black

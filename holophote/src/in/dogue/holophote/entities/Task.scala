@@ -61,6 +61,25 @@ case class Place(c:Vox) extends Task {
   override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = (b.setTask(b.task.none).spendStone, w.buildAt(c))
 }
 
+case class DigStair(pt:Vox) extends Task {
+  override def allowed(b:Worker, p:BuilderProxy, w:World) = {
+    w.isSolid(pt).select(TaskUnavailable, TaskAvailable)
+  }
+
+  override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
+    (b.setTask(b.task.none), w.placeStair(pt))
+  }
+}
+
+case class BuildStair(pt:Vox) extends Task {
+  override def allowed(b:Worker, p:BuilderProxy, w:World) = {
+    (b.hasStone && !w.isSolid(pt)).select(TaskUnavailable, TaskAvailable)
+  }
+
+  override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
+    (b.setTask(b.task.none).spendStone, w.placeStair(pt))
+  }
+}
 
 case object Gather extends Task {
   override def allowed(b:Worker, p:BuilderProxy, w:World) = {
