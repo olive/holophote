@@ -17,8 +17,8 @@ object GameMode {
     var r = new Random(0)
     val world = World.create(cols, rows, 11, r)
     r = new Random(0)
-    val jobs = Vector(Builder, Gatherer, Supervisor)
-    val es = (0 until 3).map { i =>
+    val jobs = Vector(Builder, Gatherer)
+    val es = (0 until 2).map { i =>
       val x = r.nextInt(cols)
       val y = r.nextInt(rows)
       Worker.create(cols, rows, (x, y, 4), jobs(i), r)

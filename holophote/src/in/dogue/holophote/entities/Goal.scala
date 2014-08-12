@@ -124,7 +124,7 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
   }
 
   def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
-    w.isSolid(adjPos --> Downward) && !w.isSolid(dst)
+    w.hasFloor(adjPos) && !w.isSolid(dst)
   }
 }
 
@@ -158,11 +158,11 @@ case class Stock private (from:Vox, pt:Vox, override val id:Int) extends Goal {
   }
 
   def check(b:Worker, w:World) = {
-    !w.isSolid(pt)
+    w.hasStone(pt)
   }
 
   def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
-    w.isSolid(pt --> Downward) && !w.isSolid(pt)
+    w.hasFloor(pt) && w.hasFloor(from)
   }
 }
 

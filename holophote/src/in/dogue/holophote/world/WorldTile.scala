@@ -17,30 +17,28 @@ case object Free extends TileType
 
 
 object WorldTile {
-  def create(ttype:TileType, stones:Int) = {
-    val floor = CP437.`"`.mkTile(Color.Black, Color.DarkGreen)
-    val solid = CP437.≡.mkTile(Color.Grey.dim(3), Color.Grey)
-    WorldTile(ttype, floor, solid, (0 until stones).map{_ => Stone})
+  def create(body:TileType, floor:TileType, stones:Int) = {
+    val floorTile = CP437.`"`.mkTile(Color.Black, Color.DarkGreen)
+    val bodyTile = CP437.≡.mkTile(Color.Grey.dim(3), Color.Grey)
+    WorldTile(body, floor, bodyTile, floorTile, (0 until stones).map{_ => Stone})
   }
 }
 
-case class WorldTile private (ttype:TileType, floor:Tile, solid:Tile, items:Seq[Resource]) {
-  def isWalkable:Boolean = ttype == Free
-  def isSolid:Boolean = !isWalkable
+case class WorldTile private (body:TileType, floor:TileType, bodyTile:Tile, floorTile:Tile, items:Seq[Resource]) {
+  def hasFloor = floor == Solid
+  def isPassable = body == Free
+  def isSolid = body == Solid && floor == Solid
   def hasStone = items.contains(Stone)
   def remove(r:Resource) = copy(items=items.drop(1))//fixme, remove only r's
   def add(r:Resource) = copy(items=items :+ r)
   def draw(c:Cell, below:Option[WorldTile])(tr:TileRenderer):TileRenderer = {
-    val tile =  ttype match {
-        case Solid => solid
-        case Free =>
-          below.map{t => (t.ttype, t.solid)}.map {
-            case (Solid, t) => floor
-            case (Free, t) => CP437.`.`.mkTile(Color.Black, t.fgColor)
-          }.getOrElse(CP437.` `.mkTile(Color.Black, Color.Black))
+    val tile = (body, floor, below) match {
+      case (Solid,Solid,_) | (Solid,Free,_) => bodyTile
+      case (Free,Solid,_) => floorTile
+      case (Free,Free, Some(t)) if t.body == Solid || t.floor == Solid => CP437.`.`.mkTile(Color.Black, t.bodyTile.fgColor)
+      case _ => CP437.` `.mkTile(Color.Black, Color.Black)
+    }
 
-
-      }
     val t2 = if (items.isEmpty) {
       tile
     } else {

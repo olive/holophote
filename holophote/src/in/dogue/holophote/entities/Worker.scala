@@ -49,6 +49,7 @@ object Worker {
 }
 
 case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], job:Job, id:Int, lastFailed:Option[FailureReason]) {
+  println(this)
   def noOrder = order.isNone
   def noTask = task.isNone
   def noGoal = goal.isNone

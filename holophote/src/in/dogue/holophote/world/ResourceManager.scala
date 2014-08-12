@@ -1,6 +1,5 @@
 package in.dogue.holophote.world
 
-import in.dogue.antiqua.Antiqua.Cell
 import in.dogue.antiqua.Antiqua
 import Antiqua._
 import scalaz.{-\/, \/-, \/}
