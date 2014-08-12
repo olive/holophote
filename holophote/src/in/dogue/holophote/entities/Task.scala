@@ -49,7 +49,7 @@ case class Place(c:Vox) extends Task {
     p.getOccupant(c) match {
       case Some(bb) if bb.pos != b.pos => TaskBlocked(bb)
       case _ =>
-        if ((b.pos |-| c).mag2 == 1 && !w.isSolid(c) && b.hasStone) {
+        if ((b.pos |-|-| c).mag2 == 1 && !w.isSolid(c) && b.hasStone) {
           TaskAvailable
         } else {
           TaskUnavailable
@@ -84,7 +84,7 @@ case object Drop extends Task {
 }
 case class MoveTask(dst:Vox) extends Task {
   override def allowed(b:Worker, p:BuilderProxy, w:World) = {
-    if ((b.pos |-| dst).mag != 1 || w.isSolid(dst)) {
+    if ((b.pos |-|-| dst).mag != 1 || w.isSolid(dst)) {
       TaskUnavailable
     } else {
       p.getOccupant(dst) match {

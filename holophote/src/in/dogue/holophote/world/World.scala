@@ -9,11 +9,12 @@ import Antiqua._
 import in.dogue.holophote.entities.BuilderProxy
 import in.dogue.holophote.resources.{Resource, Stone}
 import com.deweyvm.gleany.input.MouseHelper
+import scalaz.Scalaz
 
 object World {
   def create(cols:Int, rows:Int, layers:Int, r:Random) = {
     val tiles = Array3d.tabulate(cols, rows, layers) { case p =>
-      val ttype =if (p.z > 3) {
+      val ttype = if (p.z > 3) {
         Free
       } else {
         Solid
@@ -33,26 +34,32 @@ case class World private (tiles:Array3d[WorldTile]) {
     val dirs = World.dirs
     def get(c:Vox) = c
     def getNeighbors(c:Vox) = {
+
       def occupied(t:Vox) = false//es.isOccupied(t)
       def inRange(t:Vox) = t.xy.inRange((0,0,cols,rows)) && t.z >= 0 && t.z <= layers - 1
       def get(t:Vox) = t.onlyIfs(inRange(t) && !isSolid(t) && isSolid(t -->Downward) && !occupied(t))
       val up = dirs.map{ p =>
-        val upw = (p |+| c) --> Upward
-        val ups = upw.onlyIfs(inRange(upw) && !isSolid(upw) && isSolid(p |+| c) && !occupied(upw))
+        val upw = (p |+|+| c) --> Upward
+        val ups = upw.onlyIfs(inRange(upw) && !isSolid(upw) && isSolid(p |+|+| c) && !occupied(upw))
         ups
       }
+      //oo
+      //xo
+      //?x
       val down = dirs.map{ p =>
-        val dw = (p |+| c) --> Downward
-        dw.onlyIfs(inRange(dw) && !isSolid(dw) && isSolid(dw --> Downward) && !isSolid(p |+| c) && !occupied(dw))
+        val dw = (p |+|+| c) --> Downward
+        dw.onlyIfs(inRange(dw) && !isSolid(dw) && isSolid(dw --> Downward) && !isSolid(p |+|+| c) && !occupied(dw))
       }
-      val ns = dirs.map( p=> get(p |+| c)).flatten ++ up.flatten ++ down.flatten
+      val ns = dirs.map( p=> get(p |+|+| c)).flatten ++ up.flatten ++ down.flatten
       ns
     }
   }
   def addResource(c:Vox, r:Resource) = copy(tiles=tiles.update(c, _.add(r)))
   def removeResource(c:Vox, r:Resource) = copy(tiles=tiles.update(c, _.remove(r)))
   def hasStone(c:Vox) = tiles.getOption(c).exists(t => t.items.contains(Stone))
-  def buildAt(c:Vox) = copy(tiles=tiles.updated(c, WorldTile.create(Solid, 0)))
+  def buildAt(c:Vox) = {
+    copy(tiles=tiles.updated(c, WorldTile.create(Solid, 0)))
+  }
   def isSolid(c:Vox):Boolean = tiles.getOption(c).exists(_.isSolid)
 
 }

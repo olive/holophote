@@ -7,9 +7,6 @@
         <element id="module-output" name="holophote" />
         <element id="module-output" name="gleany" />
         <element id="module-output" name="antiqua" />
-        <element id="extracted-dir" path="C:/Program Files (x86)/scala/lib/scala-library.jar" path-in-jar="/" />
-        <element id="extracted-dir" path="C:/Program Files (x86)/scala/lib/scala-reflect.jar" path-in-jar="/" />
-        <element id="extracted-dir" path="C:/Program Files (x86)/scala/lib/scala-compiler.jar" path-in-jar="/" />
         <element id="extracted-dir" path="$PROJECT_DIR$/../gleany/gleany/libs/gdx-controllers-desktop-natives.jar" path-in-jar="/" />
         <element id="extracted-dir" path="$PROJECT_DIR$/../gleany/gleany/libs/gdx-backend-lwjgl-natives.jar" path-in-jar="/" />
         <element id="extracted-dir" path="$PROJECT_DIR$/../gleany/gleany/libs/gdx-backend-lwjgl.jar" path-in-jar="/" />
@@ -24,6 +21,10 @@
         <element id="extracted-dir" path="$PROJECT_DIR$/../gleany/gleany/libs/gdx-controllers-desktop.jar" path-in-jar="/" />
         <element id="extracted-dir" path="$PROJECT_DIR$/../gleany/gleany/libs/gdx-freetype-natives.jar" path-in-jar="/" />
         <element id="extracted-dir" path="$PROJECT_DIR$/../gleany/gleany/libs/gdx-controllers-desktop-sources.jar" path-in-jar="/" />
+        <element id="extracted-dir" path="$PROJECT_DIR$/libs/scalaz-core_2.11-7.1.0.jar" path-in-jar="/" />
+        <element id="extracted-dir" path="C:/Program Files (x86)/scala/lib/scala-compiler.jar" path-in-jar="/" />
+        <element id="extracted-dir" path="C:/Program Files (x86)/scala/lib/scala-library.jar" path-in-jar="/" />
+        <element id="extracted-dir" path="C:/Program Files (x86)/scala/lib/scala-reflect.jar" path-in-jar="/" />
       </root>
     </artifact>
   </component>

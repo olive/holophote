@@ -16,7 +16,7 @@ case class RectWall(from:Vox, k:Int, r:(Int,Int,Int,Int)) {
     val rows = r._4
     val list = (for (i <- 0 until cols;
                      j <- 0 until rows;
-                     if (i == 0 || j == 0 || i == cols-1 || j == rows-1) && i != cols/2) yield {
+                     if (i == 0 || j == 0 || i == cols-1 || j == rows-1) && !(i == cols/2 && j == 0)) yield {
       val p = (i, j) |+| ((r._1, r._2))
       val adj =
         if (i == 0) {

@@ -11,7 +11,7 @@ class ResourceManager(w:World) {
     w.tiles.flatten.filter{ case (ijk, t) =>
       t.hasStone
     }.sortBy{ case (ijk, t) =>
-      (ijk |-| c).mag
+      (ijk |-|-| c).mag
     }.map {
       _._1
     }.headOption match {
