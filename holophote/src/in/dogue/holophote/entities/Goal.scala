@@ -1,6 +1,6 @@
 package in.dogue.holophote.entities
 
-import in.dogue.antiqua.data.Graph
+import in.dogue.antiqua.data.{Downward, Graph}
 import in.dogue.holophote.world.{ResourceManager, World}
 import in.dogue.antiqua.Antiqua
 import Antiqua._
@@ -16,6 +16,7 @@ sealed trait Goal {
   def reserve:Goal
   def free:Goal
   def isNone:Boolean = this == NoGoal
+  def isPossibleFor(b:Worker, rm:ResourceManager, w:World):Boolean
   def none:Goal = NoGoal
   def id:Int
   def check(b:Worker, w:World):Boolean
@@ -35,6 +36,7 @@ case object NoGoal extends Goal {
   def reserve = this
   def free = this
   def check(b:Worker, w:World) = true
+  def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = true
 }
 
 object Move {
@@ -61,6 +63,10 @@ case class Move(dst:Vox, r:Boolean, override val id:Int) extends Goal {
   def check(b:Worker, w:World) = {
     b.pos == dst
   }
+
+  def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
+    true//always try, no better way than to pathfind and return None
+  }
 }
 
 object Build {
@@ -86,6 +92,7 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
       }
     }
     if (isHolding) {
+      println("holding stone " + b.pos + " --> " + adjPos)
       for {
         path <- Holophote.pfind(b.pos, adjPos, gr).map{_.drop(1)}
       } yield {
@@ -93,7 +100,7 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
       }
 
     } else {
-      //println("not holding " + b.pos + " --> " + rm.nearest(dst))
+      println("not holding " + b.pos + " --> " + rm.nearest(dst))
       for {
         p <- rm.nearest(dst)
         path1 <- Holophote.pfind(b.pos, p, gr).map{_.drop(1)}
@@ -107,6 +114,10 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
 
   def check(b:Worker, w:World) = {
     b.pos == adjPos && w.isSolid(dst)
+  }
+
+  def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
+    w.isSolid(adjPos --> Downward ) && !w.isSolid(dst)
   }
 }
 

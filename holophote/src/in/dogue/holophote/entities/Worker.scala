@@ -11,10 +11,10 @@ import in.dogue.holophote.world.{ResourceManager, World}
 
 object Worker {
   var count = 0
-  def create(cols:Int, rows:Int, pos:Vox,  r:Random) = {
+  def create(cols:Int, rows:Int, pos:Vox, job:Job,  r:Random) = {
     val tile = CP437.B.mkTile(Color.Black, Color.White)
     count += 1
-    Worker(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, count)
+    Worker(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, job, count)
   }
 
   def performTask(builder:Worker, gp:GoalPool, world:World) = {
@@ -36,13 +36,13 @@ object Worker {
 
   }
   def finishGoal(b:Worker, gp:GoalPool):(Worker, GoalPool) = {
-    b.removeGoal @@ gp.finish(b.goal)
+    b.removeGoal @@ gp.finish(b.job, b.goal)
   }
 
 }
 
-case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], id:Int) {
-  //println(goal + " " + order + " " + task)
+case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], job:Job, id:Int) {
+  println(goal + " " + order + " " + task)
   def noOrder = order.isNone
   def noTask = task.isNone
   def noGoal = goal.isNone
@@ -55,9 +55,11 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
       this @@ pool
     } else {
       goal.toOrder(this, new ResourceManager(w), w.toGraph(p)) match {
-        case Some(ord) => copy(order = ord) @@ pool
+        case Some(ord) =>
+          copy(order = ord) @@ pool
         case None =>
-          removeGoal @@ pool.surrender(goal)
+          println("failed to get orders")
+          removeGoal @@ pool.surrender(job, goal)
       }
     }
   }
@@ -92,8 +94,9 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
 
   def setTask(t:Task):Worker = copy(task=t)
 
-  def giveGoal(g:Goal) = copy(goal=g)
-
+  def giveGoal(g:Goal) = {
+    copy(goal=g)
+  }
 
   def draw(tr:TileRenderer):TileRenderer = {
     tr <+ (pos.xy, tile.setFg(getColor(task)))

@@ -2,10 +2,10 @@ package in.dogue.holophote.blueprints
 
 import in.dogue.antiqua.data.Graph
 import in.dogue.antiqua.Antiqua._
-import in.dogue.holophote.entities.{Build, Goal}
+import in.dogue.holophote.entities.{Builder, Job, Build, Goal}
 
 trait Blueprint {
-  def generate(g:Graph[Vox,Vox]):List[Goal]
+  def generate(g:Graph[Vox,Vox]):Map[Job, List[Goal]]
 }
 
 case class RectWall(r:(Int,Int,Int,Int)) {
@@ -13,7 +13,9 @@ case class RectWall(r:(Int,Int,Int,Int)) {
   def generate(k:Int, g:Graph[Vox,Vox]) = {
     val cols = r._3
     val rows = r._4
-    (for (i <- 0 until cols; j <- 0 until rows; if i == 0 || j == 0 || i == cols-1 || j == rows-1) yield {
+    val list = (for (i <- 0 until cols;
+                     j <- 0 until rows;
+                     if i == 0 || j == 0 || i == cols-1 || j == rows-1) yield {
       val p = (i, j) |+| ((r._1, r._2))
       val adj =
         if (i == 0) {
@@ -31,9 +33,11 @@ case class RectWall(r:(Int,Int,Int,Int)) {
     }.map { case (p, adj) =>
       Build.create(adj @@ k, p @@ k)
     }.toList
+
+    Map[Job, List[Goal]](Builder -> list).withDefaultValue(List())
   }
 
   def toBlueprint(k:Int) = new Blueprint {
-    override def generate(g: Graph[Vox,Vox]): List[Goal] = self.generate(k, g)
+    override def generate(g: Graph[Vox,Vox]): Map[Job, List[Goal]] = self.generate(k, g)
   }
 }

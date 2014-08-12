@@ -2,7 +2,7 @@ package in.dogue.holophote.entities
 
 import in.dogue.antiqua.Antiqua
 import Antiqua._
-import in.dogue.holophote.world.World
+import in.dogue.holophote.world.{ResourceManager, World}
 import in.dogue.antiqua.data.{Direction3}
 import scala.util.Random
 
@@ -31,26 +31,28 @@ class EntityManager {
           pool = pp
           world = ww
         case TaskBlocked(blocker) =>
+          println("blocked")
           val k = vs.indexOf(blocker)
           val d = Direction3.Planar.randomR(new Random(0))
           val (blk, pp) = blocker.removeGoal.giveGoal(Move.create(blocker.pos --> d --> d)).update(new BuilderProxy(vs), world, pool)
           pool = pp
           vs = vs.updated(k, blk)
-          pool = pool.surrender(blocker.goal)
+          pool = pool.surrender(blocker.job, blocker.goal)
           vs = vs.updated(i, b.removeGoal)
-          pool = pool.surrender(b.goal)
+          pool = pool.surrender(b.job, b.goal)
         case TaskUnavailable =>
+          println("unavailable")
           vs = vs.updated(i, b.removeGoal)
-          pool = pool.surrender(b.goal)
+          pool = pool.surrender(b.job, b.goal)
       }
     }
     (vs.toList, pool, world)
   }
 
 
-  def manageGoal(b:Worker, gp:GoalPool): (Worker, GoalPool) = {
+  def manageGoal(rm:ResourceManager, w:World)(b:Worker, gp:GoalPool): (Worker, GoalPool) = {
     if (b.noGoal) {
-      gp.giveGoal(b)
+      gp.giveGoal(b, rm, w)
     } else {
       (b, gp)
     }
