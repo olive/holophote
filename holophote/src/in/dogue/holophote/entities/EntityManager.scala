@@ -34,14 +34,14 @@ class EntityManager {
           val k = vs.indexOf(blocker)
           val d = Direction3.Planar.randomR(new Random())
           println(d)
-          val (blk, pp) = blocker.removeGoal.giveGoal(Move.create(blocker.pos --> d --> d)).update(new BuilderProxy(vs), world, pool)
+          val (blk, pp) = blocker.removeGoal(FailureReason.Jam(b)).giveGoal(Move.create(blocker.pos --> d --> d)).update(new BuilderProxy(vs), world, pool)
           pool = pp
           vs = vs.updated(k, blk)
           pool = pool.surrender(blocker.job, blocker.goal)
-          vs = vs.updated(i, b.removeGoal)
+          vs = vs.updated(i, b.removeGoal(FailureReason.Jam(blk)))
           pool = pool.surrender(b.job, b.goal)
         case TaskUnavailable =>
-          vs = vs.updated(i, b.removeGoal)
+          vs = vs.updated(i, b.removeGoal(FailureReason.Unknown/*fixme*/))
           pool = pool.surrender(b.job, b.goal)
       }
     }

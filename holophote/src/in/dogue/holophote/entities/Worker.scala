@@ -8,13 +8,20 @@ import in.dogue.antiqua.Antiqua
 import Antiqua._
 import in.dogue.holophote.resources.{Stone, Resource}
 import in.dogue.holophote.world.{ResourceManager, World}
+import scalaz.{-\/, \/-}
+import in.dogue.holophote.Holophote
 
 object Worker {
   var count = 0
   def create(cols:Int, rows:Int, pos:Vox, job:Job,  r:Random) = {
-    val tile = CP437.B.mkTile(Color.Black, Color.White)
+    val code = job match {
+      case Builder => CP437.B
+      case Supervisor => CP437.S
+      case Gatherer => CP437.G
+    }
+    val tile = code.mkTile(Color.Black, Color.White)
     count += 1
-    Worker(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, job, count)
+    Worker(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, job, count, None)
   }
 
   def performTask(builder:Worker, gp:GoalPool, world:World) = {
@@ -36,13 +43,12 @@ object Worker {
 
   }
   def finishGoal(b:Worker, gp:GoalPool):(Worker, GoalPool) = {
-    b.removeGoal @@ gp.finish(b.job, b.goal)
+    b.removeGoal(FailureReason.AlreadyComplete) @@ gp.finish(b.job, b.goal)
   }
 
 }
 
-case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], job:Job, id:Int) {
-  println(job + " " + goal + " " + order + " " + task)
+case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], job:Job, id:Int, lastFailed:Option[FailureReason]) {
   def noOrder = order.isNone
   def noTask = task.isNone
   def noGoal = goal.isNone
@@ -55,10 +61,10 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
       this @@ pool
     } else {
       goal.toOrder(this, new ResourceManager(w), w.toGraph(p)) match {
-        case Some(ord) =>
+        case \/-(ord) =>
           copy(order = ord) @@ pool
-        case None =>
-          removeGoal @@ pool.surrender(job, goal)
+        case -\/(f) =>
+          removeGoal(f) @@ pool.surrender(job, goal)
       }
     }
   }
@@ -83,7 +89,9 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
     }
   }
 
-  def removeGoal = copy(task=task.none, order=order.none, goal=goal.none)
+  def removeGoal(reason:FailureReason) = {
+    copy(task=task.none, order=order.none, goal=goal.none, lastFailed=reason.some)
+  }
 
   def setOrder(t:Task, o:Order):Worker = {
     copy(task=t, order=o)
@@ -94,10 +102,15 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
   def setTask(t:Task):Worker = copy(task=t)
 
   def giveGoal(g:Goal) = {
-    copy(goal=g)
+    copy(goal=g, lastFailed=None)
   }
 
   def draw(tr:TileRenderer):TileRenderer = {
     tr <+ (pos.xy, tile.setFg(getColor(task)))
+  }
+
+  override def toString:String = {
+    val fail = lastFailed.map{l =>  "\n    Failed because:%s".format(l)}.getOrElse("")
+    "%s: %d %s\n    Goal:%s\n    Ords:%s\n    Task:%s%s".format(job, id, pos, goal, order, task, fail)
   }
 }

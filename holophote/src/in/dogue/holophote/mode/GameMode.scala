@@ -15,7 +15,7 @@ import in.dogue.antiqua.algebra.Monoid
 object GameMode {
   def create(cols:Int, rows:Int, r:Random) = {
     var r = new Random(0)
-    val world = World.create(cols, rows, 10, r)
+    val world = World.create(cols, rows, 11, r)
     r = new Random(0)
     val jobs = Vector(Builder, Gatherer, Supervisor)
     val es = (0 until 3).map { i =>
@@ -24,14 +24,15 @@ object GameMode {
       Worker.create(cols, rows, (x, y, 4), jobs(i), r)
     }.toList
     val wg = world.toGraph(new BuilderProxy(es))
-    val gatherPt = (50,25,4 )
-    val wall  = RectWall(gatherPt,4,(10,10,10,10)).generate(wg)
-    val wall2 = RectWall(gatherPt,5,(11,11,8,8)).generate(wg)
-    val wall3 = RectWall(gatherPt,6,(12,12,6,6)).generate(wg)
-    val wall4 = RectWall(gatherPt,7,(13,13,4,4)).generate(wg)
-    val wall5 = RectWall(gatherPt,8,(14,14,2,2)).generate(wg)
+    val gatherPt = (50,25,4)
+    val wall  = RectWall(gatherPt,4,(10,10,11,11)).generate(wg)
+    val wall2 = RectWall(gatherPt,5,(11,11,9,9)).generate(wg)
+    val wall3 = RectWall(gatherPt,6,(12,12,7,7)).generate(wg)
+    val wall4 = RectWall(gatherPt,7,(13,13,5,5)).generate(wg)
+    val wall5 = RectWall(gatherPt,8,(14,14,3,3)).generate(wg)
+    val wall6 = RectWall(gatherPt,9,(14,14,1,1)).generate(wg)
     import Monoid._
-    val (major, minor) = wall <+> wall2 <+> wall3 <+> wall4 <+> wall5
+    val (major, minor) = wall <+> wall2 <+> wall3 <+> wall4 <+> wall5 <+> wall6
     val gp = GoalPool(major, minor)
     val em = new EntityManager()
     GameMode(cols, rows, world, es, gp, em, WorldViewer.create(cols, rows, world, es), 0)

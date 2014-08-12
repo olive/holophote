@@ -20,6 +20,7 @@
     <orderEntry type="library" name="scala-library" level="application" />
     <orderEntry type="library" name="libs" level="project" />
     <orderEntry type="module" module-name="antiqua" />
+    <orderEntry type="library" name="scalaz-core_2.11-7.1.0" level="project" />
   </component>
 </module>
 
