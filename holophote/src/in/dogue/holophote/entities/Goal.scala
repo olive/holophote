@@ -1,7 +1,7 @@
 package in.dogue.holophote.entities
 
-import in.dogue.antiqua.data.{Downward, Graph}
-import in.dogue.holophote.world.{ResourceManager, World}
+import in.dogue.antiqua.data.{Direction3, Downward, Graph}
+import in.dogue.holophote.world.{Stair, ResourceManager, World}
 import in.dogue.antiqua.Antiqua
 import Antiqua._
 import in.dogue.holophote.Holophote
@@ -167,7 +167,8 @@ case class Stock private (from:Vox, pt:Vox, override val id:Int) extends Goal {
 }
 
 sealed trait DigType
-case class Stair(pt:Vox) extends DigType
+case class StairWall(pt:Vox) extends DigType
+case class StairDown(pt:Vox) extends DigType
 case object Tunnel extends DigType
 
 object Dig {
@@ -182,19 +183,40 @@ case class Dig private (pt:Vox, dt:DigType, override val id:Int) extends Goal {
   def isReserved = false
   def free = this
   def toOrder(b:Worker, rm:ResourceManager, gr:Graph[Vox,Vox]):FailureReason \/ Order = {
-    -\/(FailureReason.Unknown)
+    dt match {
+      case StairDown(t) =>
+        for {
+          path <- Holophote.pfind(b.pos, pt, gr)
+        } yield {
+          TaskList(List(Path(path), DigStair(t)))
+        }
+      case _ =>
+        for (adj <- Direction3.Planar.map { d => pt --> d}) {
+          for {
+            path <- Holophote.pfind(b.pos, adj, gr)
+          } yield {
+            return \/-(TaskList(List(Path(path), DigTunnel(pt))))
+          }
+        }
+        -\/(FailureReason.NoPath(b.pos, pt))
+
+    }
 
   }
 
   def check(b:Worker, w:World) = {
     dt match {
-      case Stair(t) => w.isStair(t)
+      case StairDown(t) => w.isStair(t)
+      case StairWall(t) => w.isStair(t)
       case Tunnel => w.isPassable(pt)
     }
   }
 
   def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
-    ???
+    Direction3.Planar.exists{d =>
+      val p = pt --> d
+      Holophote.pfind(b.pos, p, w.toGraph(new BuilderProxy(List()))/*hack*/).isRight
+    }
   }
 }
 

@@ -27,7 +27,6 @@ object WorldTile {
 }
 
 case class WorldTile private (ttype:TileType, bodyTile:Tile, floorTile:Tile, items:Seq[Resource]) {
-  def isStandable = ttype == Stair || ttype == FloorSolid
   def isPassable = ttype != WholeSolid
   def isSolid = ttype == WholeSolid
   def isStair = ttype == Stair
@@ -39,8 +38,8 @@ case class WorldTile private (ttype:TileType, bodyTile:Tile, floorTile:Tile, ite
     val tile = (ttype, below) match {
       case (WholeSolid, _) => bodyTile
       case (FloorSolid,_) => floorTile
+      case (Free, Some(t)) if t.isStair => CP437.`v`.mkTile(Color.Black, Color.Brown)
       case (Free, Some(t)) if !t.isFree => CP437.`.`.mkTile(Color.Black, t.bodyTile.fgColor)
-      case (Free, Some(t)) if !t.isStair => CP437.`v`.mkTile(Color.Black, Color.Brown)
       case (Stair, _) => CP437.`X`.mkTile(Color.Black, Color.Brown)
       case _ => CP437.` `.mkTile(Color.Black, Color.Black)
     }

@@ -9,7 +9,7 @@ import in.dogue.antiqua.Antiqua
 import Antiqua._
 import in.dogue.holophote.entities._
 import in.dogue.holophote.world.{ResourceManager, WorldViewer, World}
-import in.dogue.holophote.blueprints.RectWall
+import in.dogue.holophote.blueprints.{Mine, RectWall}
 import in.dogue.antiqua.algebra.Monoid
 
 object GameMode {
@@ -17,14 +17,15 @@ object GameMode {
     var r = new Random(0)
     val world = World.create(cols, rows, 11, r)
     r = new Random(0)
-    val jobs = Vector(Builder, Gatherer)
-    val es = (0 until 2).map { i =>
+    val jobs = Vector(Builder, Gatherer, Miner)
+    val es = jobs.map { job =>
       val x = r.nextInt(cols)
       val y = r.nextInt(rows)
-      Worker.create(cols, rows, (x, y, 4), jobs(i), r)
+      Worker.create(cols, rows, (x, y, 4), job, r)
     }.toList
     val wg = world.toGraph(new BuilderProxy(es))
     val gatherPt = (50,25,4)
+    val hole = Mine(3, (10,10,11,11)).generate(wg)
     val wall  = RectWall(gatherPt,4,(10,10,11,11)).generate(wg)
     val wall2 = RectWall(gatherPt,5,(11,11,9,9)).generate(wg)
     val wall3 = RectWall(gatherPt,6,(12,12,7,7)).generate(wg)
@@ -32,7 +33,7 @@ object GameMode {
     val wall5 = RectWall(gatherPt,8,(14,14,3,3)).generate(wg)
     val wall6 = RectWall(gatherPt,9,(14,14,1,1)).generate(wg)
     import Monoid._
-    val (major, minor) = wall <+> wall2 <+> wall3 <+> wall4 <+> wall5 <+> wall6
+    val (major, minor) = hole <+> wall <+> wall2 <+> wall3 <+> wall4 <+> wall5 <+> wall6
     val gp = GoalPool(major, minor)
     val em = new EntityManager()
     GameMode(cols, rows, world, es, gp, em, WorldViewer.create(cols, rows, world, es), 0)

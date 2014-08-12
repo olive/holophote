@@ -67,7 +67,17 @@ case class DigStair(pt:Vox) extends Task {
   }
 
   override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
-    (b.setTask(b.task.none), w.placeStair(pt))
+    (b.setTask(b.task.none), w.digStair(pt))
+  }
+}
+
+case class DigTunnel(pt:Vox) extends Task {
+  override def allowed(b:Worker, p:BuilderProxy, w:World) = {
+    (w.isSolid(pt) && (pt |-|-| b.pos).mag == 1).select(TaskUnavailable, TaskAvailable)
+  }
+
+  override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
+    (b.setTask(b.task.none), w.dig(pt))
   }
 }
 

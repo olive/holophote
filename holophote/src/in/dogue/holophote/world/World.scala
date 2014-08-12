@@ -46,19 +46,24 @@ case class World private (tiles:Array3d[WorldTile]) {
       }
       //o_
       //☺o
-      val up = dirs.map{ p =>
+      val slopeUp = dirs.map{ p =>
         val upw = (p |+|+| c) --> Upward
         val ups = upw.onlyIfs(inRange(upw) && isPassable(upw) && isStandable(upw) && !occupied(upw))
         ups
       }
       //☺o
       //?_
-      val down = dirs.map{ p =>
+      val slopeDown = dirs.map{ p =>
         val over = p |+|+| c
         val dw = over --> Downward
         dw.onlyIfs(inRange(dw) && !occupied(dw) && !occupied(over) && isPassable(over) && !isStandable(over) && isStandable(dw))
       }
-      val ns = adj.flatten ++ up.flatten ++ down.flatten
+      val downPos = c --> Downward
+      val down = downPos.onlyIfs(inRange(downPos) && isStair(downPos))
+
+      val upPos = c --> Upward
+      val up = upPos.onlyIfs(inRange(upPos) && isStair(c))
+      val ns = adj.flatten ++ slopeUp.flatten ++ slopeDown.flatten ++ down ++ up
       ns
     }
   }
@@ -67,21 +72,28 @@ case class World private (tiles:Array3d[WorldTile]) {
   def hasStone(c:Vox) = tiles.getOption(c).exists(t => t.items.contains(Stone))
   def buildAt(c:Vox) = {
     val current = tiles.updated(c, WorldTile.create(WholeSolid, 0))
-    val newTiles = if (!tiles.get(c --> Upward).isStandable) {
+    val newTiles = if (tiles.get(c --> Upward).isFree) {
       current.updated(c --> Upward, WorldTile.create(FloorSolid,  0))
     } else {
       current
     }
     copy(tiles=newTiles)
   }
-  @inline def exists(c:Vox, f:WorldTile => Boolean) = tiles.getOption(c).exists(f)
-  def isStandable(c:Vox):Boolean = exists(c, _.isStandable)
-  def isStair(c:Vox):Boolean =     exists(c, _.isStair)
-  def isPassable(c:Vox):Boolean =  exists(c, _.isPassable)
-  def isWalkable(c:Vox):Boolean =  exists(c, t => t.isPassable && t.isStandable)
-  def isSolid(c:Vox):Boolean =     exists(c, _.isSolid)
-
+  def digStair(c:Vox):World = {
+    copy(tiles=tiles.updated(c, WorldTile.create(Stair,  0)).updated(c-->Upward, WorldTile.create(Free, 0)))
+  }
   def placeStair(c:Vox):World = {
     copy(tiles=tiles.updated(c, WorldTile.create(Stair,  0)))
   }
+
+  def dig(c:Vox):World = {
+    copy(tiles=tiles.updated(c, WorldTile.create(FloorSolid,  0)))
+  }
+  @inline def exists(c:Vox, f:WorldTile => Boolean) = tiles.getOption(c).exists(f)
+  def isStandable(c:Vox):Boolean = exists(c, t => t.ttype == FloorSolid || t.ttype == Stair) || exists(c --> Downward, _.isStair)
+  def isStair(c:Vox):Boolean =     exists(c, _.isStair)
+  def isPassable(c:Vox):Boolean =  exists(c, _.isPassable)
+  def isWalkable(c:Vox):Boolean =  exists(c, t => t.isPassable) && isStandable(c)
+  def isSolid(c:Vox):Boolean =     exists(c, _.isSolid)
+
 }
