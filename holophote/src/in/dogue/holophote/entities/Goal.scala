@@ -37,7 +37,7 @@ case object NoGoal extends Goal {
   override val parent = netherPlan.id
   override val id = -1
   def toOrder(b:Worker, rm:ResourceManager, gr:Graph[Vox,Vox]):FailureReason \/ Order = {
-    -\/(FailureReason.AlreadyComplete)
+    -\/(FailureReason.Other("Had no goal in the first place"))
   }
   def isReserved = false
   def reserve = this
