@@ -42,8 +42,8 @@ class EntityManager {
           schema = schema.surrender(blocker.job, blocker.goal)
           vs = vs.updated(i, b.removeGoal(FailureReason.Jam(blk)))
           schema = schema.surrender(b.job, b.goal)
-        case TaskUnavailable =>
-          vs = vs.updated(i, b.removeGoal(FailureReason.Unknown/*fixme -- why is it unavailable?*/))
+        case TaskUnavailable(reason) =>
+          vs = vs.updated(i, b.removeGoal(FailureReason.Other(reason)))
           schema = schema.surrender(b.job, b.goal)
       }
     }

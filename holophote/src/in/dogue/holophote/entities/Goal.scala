@@ -171,7 +171,7 @@ case class Stock private (from:Vox, tok:Int, to:(Int,Int,Int,Int), override val 
 }
 
 sealed trait DigType
-case class StairWall(pt:Vox) extends DigType
+case object StairWall extends DigType
 case class StairDown(pt:Vox) extends DigType
 case object Tunnel extends DigType
 
@@ -187,6 +187,17 @@ case class Dig private (pt:Vox, dt:DigType, override val parent:PlanId, override
   def isReserved = false
   def free = this
   def toOrder(b:Worker, rm:ResourceManager, gr:Graph[Vox,Vox]):FailureReason \/ Order = {
+    def digAdjacent(p:Vox, task:Task):FailureReason \/ Order = {
+      for (adj <- Direction3.Planar.map { d => p --> d}) {
+        for {
+          path <- Holophote.pfind(b.pos, adj, gr)
+        } yield {
+          return \/-(TaskList(List(Path(path), task)))
+        }
+      }
+      -\/(FailureReason.NoPath(b.pos, pt))
+    }
+
     dt match {
       case StairDown(t) =>
         for {
@@ -194,16 +205,11 @@ case class Dig private (pt:Vox, dt:DigType, override val parent:PlanId, override
         } yield {
           TaskList(List(Path(path), DigStair(t)))
         }
-      case _ =>
-        for (adj <- Direction3.Planar.map { d => pt --> d}) {
-          for {
-            path <- Holophote.pfind(b.pos, adj, gr)
-          } yield {
-            return \/-(TaskList(List(Path(path), DigTunnel(pt))))
-          }
-        }
-        -\/(FailureReason.NoPath(b.pos, pt))
+      case StairWall =>
+        digAdjacent(pt, DigStair(pt))
 
+      case Tunnel =>
+        digAdjacent(pt, DigTunnel(pt))
     }
 
   }
@@ -211,7 +217,7 @@ case class Dig private (pt:Vox, dt:DigType, override val parent:PlanId, override
   def check(b:Worker, w:World) = {
     dt match {
       case StairDown(t) => w.isStair(t)
-      case StairWall(t) => w.isStair(t)
+      case StairWall => w.isStair(pt)
       case Tunnel => w.isPassable(pt)
     }
   }

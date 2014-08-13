@@ -112,7 +112,7 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
   }
 
   override def toString:String = {
-    val fail = lastFailed.map{l =>  "\n    Failed because:%s".format(l)}.getOrElse("")
-    "%s: %d %s\n    Goal:%s\n    Ords:%s\n    Task:%s%s".format(job, id, pos, goal, order, task, fail)
+    val fail = lastFailed.fold(""){l =>  "\n    Failed because:%s".format(l)}
+    "%s:#%d@%s\n    Goal:%s\n    Ords:%s\n    Task:%s%s".format(job, id, pos, goal, order, task, fail)
   }
 }

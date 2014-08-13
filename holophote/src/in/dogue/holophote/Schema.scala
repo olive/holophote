@@ -4,7 +4,6 @@ import in.dogue.holophote.entities._
 import in.dogue.holophote.world.{ResourceManager, World}
 import in.dogue.antiqua.Antiqua
 import Antiqua._
-import com.badlogic.gdx.Gdx
 
 
 object Schema {

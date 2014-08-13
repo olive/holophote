@@ -9,7 +9,7 @@ object FailureReason {
   case class DestinationUnsuitable(pos:Vox) extends FailureReason
   case object AlreadyComplete extends FailureReason
   case object NoResource extends FailureReason
-  case object Unknown extends FailureReason
+  case class Other(s:String) extends FailureReason
 
 
 }

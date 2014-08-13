@@ -98,7 +98,7 @@ case class World private (tiles:Array3d[WorldTile]) {
   }
 
   def dig(c:Vox):World = {
-    copy(tiles=tiles.updated(c, WorldTile.create(FloorSolid,  0)))
+    copy(tiles=tiles.updated(c, WorldTile.create(FloorSolid,  1)))
   }
   @inline def exists(c:Vox, f:WorldTile => Boolean) = tiles.getOption(c).exists(f)
   def isStandable(c:Vox):Boolean = exists(c, t => t.ttype == FloorSolid || t.ttype == Stair) || exists(c --> Downward, _.isStair)

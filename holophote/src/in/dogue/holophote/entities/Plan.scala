@@ -8,7 +8,7 @@ import in.dogue.antiqua.data.Graph
 
 
 final class PlanId(val id:BigInt) extends AnyVal {
-
+  override def toString = id.toString()
 }
 
 object Plan {
