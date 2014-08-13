@@ -13,6 +13,7 @@ object Goal {
 }
 
 sealed trait Goal {
+  def parent:PlanId
   def toOrder(b:Worker, rm:ResourceManager, gr:Graph[Vox,Vox]):FailureReason \/ Order
   def isReserved:Boolean
   def reserve:Goal
@@ -32,6 +33,8 @@ sealed trait Goal {
 }
 
 case object NoGoal extends Goal {
+  private val netherPlan = Plan.create(Map(), Map())
+  override val parent = netherPlan.id
   override val id = -1
   def toOrder(b:Worker, rm:ResourceManager, gr:Graph[Vox,Vox]):FailureReason \/ Order = {
     -\/(FailureReason.AlreadyComplete)
@@ -44,13 +47,13 @@ case object NoGoal extends Goal {
 }
 
 object Move {
-  def create(dst:Vox) = {
+  def create(dst:Vox)(parent:PlanId) = {
     Goal.id += 1
-    Move(dst, false, Goal.id)
+    Move(dst, false, parent, Goal.id)
   }
 }
 
-case class Move(dst:Vox, r:Boolean, override val id:Int) extends Goal {
+case class Move(dst:Vox, r:Boolean, override val parent:PlanId, override val id:Int) extends Goal {
   def reserve = copy(r=true)
   def isReserved = r
   def free = copy(r=false)
@@ -78,13 +81,13 @@ case class Move(dst:Vox, r:Boolean, override val id:Int) extends Goal {
 }
 
 object Build {
-  def create(adjPos:Vox, dst:Vox) = {
+  def create(adjPos:Vox, dst:Vox)(parent:PlanId):Goal = {
     Goal.id += 1
-    Build(adjPos, dst, false, Goal.id)
+    Build(adjPos, dst, false, parent, Goal.id)
   }
 }
 
-case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) extends Goal {
+case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val parent:PlanId, override val id:Int) extends Goal {
 
   def reserve = copy(r=true)
   def isReserved = r
@@ -129,13 +132,13 @@ case class Build private (adjPos:Vox, dst:Vox, r:Boolean, override val id:Int) e
 }
 
 object Stock {
-  def create(tok:Int, to:(Int,Int,Int,Int), from:Vox) = {
+  def create(tok:Int, to:(Int,Int,Int,Int), from:Vox)(parent:PlanId) = {
     Goal.id += 1
-    Stock(from, tok, to, Goal.id)
+    Stock(from, tok, to, parent, Goal.id)
   }
 }
 
-case class Stock private (from:Vox, tok:Int, to:(Int,Int,Int,Int), override val id:Int) extends Goal {
+case class Stock private (from:Vox, tok:Int, to:(Int,Int,Int,Int), override val parent:PlanId, override val id:Int) extends Goal {
   def reserve = this
   def isReserved = false
   def free = this
@@ -173,13 +176,13 @@ case class StairDown(pt:Vox) extends DigType
 case object Tunnel extends DigType
 
 object Dig {
-  def create(pt:Vox, dt:DigType) = {
+  def create(pt:Vox, dt:DigType)(parent:PlanId) = {
     Goal.id += 1
-    Dig(pt, dt, Goal.id)
+    Dig(pt, dt, parent, Goal.id)
   }
 }
 
-case class Dig private (pt:Vox, dt:DigType, override val id:Int) extends Goal {
+case class Dig private (pt:Vox, dt:DigType, override val parent:PlanId, override val id:Int) extends Goal {
   def reserve = this
   def isReserved = false
   def free = this

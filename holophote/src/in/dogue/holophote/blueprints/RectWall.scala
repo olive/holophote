@@ -9,7 +9,7 @@ import Antiqua._
 case class RectWall(from:Vox, k:Int, r:(Int,Int,Int,Int)) {
   self =>
   val to = (r._1+1, r._2+1, r._3-2,r._4-2)
-  def generate(g:Graph[Vox,Vox]) = {
+  def generate(g:Graph[Vox,Vox]):(Seq[(Job, PlanId=>Goal)], Seq[(Job, PlanId=>Goal)]) = {
     val cols = r._3
     val rows = r._4
     val list = (for (i <- 0 until cols;
@@ -30,19 +30,19 @@ case class RectWall(from:Vox, k:Int, r:(Int,Int,Int,Int)) {
     }).sortBy { case (p, adj) =>
       math.atan2(p.y - r._2 - rows/2, p.x - r._1 - cols/2)
     }.map { case (p, adj) =>
-      Build.create(adj @@ k, p @@ k)
+      (Builder:Job) -> Build.create(adj @@ k, p @@ k) _
     }.toList
 
-    val major = Map[Job, List[Goal]](Builder -> list).withDefaultValue(List())
-    val minor = Map[Job, List[Goal]](
-      Gatherer -> List(Stock.create(k, to, from))
+    val major = list
+    val minor = Seq[(Job, PlanId=>Goal)](
+      Gatherer -> Stock.create(k, to, from) _
 
-    ).withDefaultValue(List())
+    )
     major @@ minor
   }
 
   def toBlueprint = new Blueprint {
-    override def generate(g: Graph[Vox,Vox]):(Map[Job, List[Goal]],Map[Job, List[Goal]]) = {
+    override def generate(g: Graph[Vox,Vox]) = {
       self.generate(g)
     }
   }

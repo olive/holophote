@@ -9,11 +9,11 @@ import Antiqua._
 import in.dogue.holophote.resources.{Stone, Resource}
 import in.dogue.holophote.world.{ResourceManager, World}
 import scalaz.{-\/, \/-}
-import in.dogue.holophote.Holophote
+import in.dogue.holophote.{Schema, Holophote}
 
 object Worker {
   var count = 0
-  def create(cols:Int, rows:Int, pos:Vox, job:Job,  r:Random) = {
+  def create(cols:Int, rows:Int, pos:Vox, job:Job, r:Random) = {
     val code = job match {
       case Builder => CP437.B
       case Supervisor => CP437.S
@@ -25,26 +25,26 @@ object Worker {
     Worker(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, job, count, None)
   }
 
-  def performTask(builder:Worker, gp:GoalPool, world:World) = {
-    val (b, w) = builder.task.perform(builder, world, gp)
+  def performTask(builder:Worker, sc:Schema, world:World) = {
+    val (b, w) = builder.task.perform(builder, world, sc)
     if (b.task.isNone && !b.goal.isNone && !b.order.isNone) {
       val (no, ntOpt) = b.order.next
       ntOpt match {
         case Some(t) =>
-          b.setOrder(t, no) @@ gp @@ w
+          b.setOrder(t, no) @@ sc @@ w
         case None =>
           if (!b.goal.check(b, w)) {
             throw new RuntimeException("Postcondition was not met\n%s\n%s".format(b.pos, b.goal))
           }
-          finishGoal(b, gp) @@ w
+          finishGoal(b, sc) @@ w
       }
     } else {
-      b @@ gp @@ w
+      b @@ sc @@ w
     }
 
   }
-  def finishGoal(b:Worker, gp:GoalPool):(Worker, GoalPool) = {
-    b.removeGoal(FailureReason.AlreadyComplete) @@ gp.finish(b.job, b.goal)
+  def finishGoal(b:Worker, sc:Schema):(Worker, Schema) = {
+    b.removeGoal(FailureReason.AlreadyComplete) @@ sc.finish(b.job, b.goal)
   }
 
 }
@@ -58,7 +58,7 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
   def give(r:Resource) = copy(inv = r.some)
   def hasStone = inv == Some(Stone)
   def spendStone = copy(inv=None)
-  private def updateOrder(p:BuilderProxy, w:World, pool:GoalPool) = {
+  private def updateOrder(p:BuilderProxy, w:World, pool:Schema) = {
     if (goal.isNone) {
       this @@ pool
     } else {
@@ -83,7 +83,7 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
     }
   }
 
-  def update(p:BuilderProxy, w:World, pool:GoalPool): (Worker, GoalPool) = {
+  def update(p:BuilderProxy, w:World, pool:Schema): (Worker, Schema) = {
     if (noOrder) {
       updateOrder(p, w, pool)
     } else {

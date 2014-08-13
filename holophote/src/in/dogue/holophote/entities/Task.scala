@@ -5,6 +5,7 @@ import in.dogue.holophote.world.World
 import in.dogue.antiqua.Antiqua
 import Antiqua._
 import in.dogue.holophote.resources.Stone
+import in.dogue.holophote.Schema
 
 
 sealed trait TaskResult
@@ -17,7 +18,7 @@ sealed trait Task {
   def isNone = this == NoTask
   def none = NoTask
   def allowed(b:Worker, p:BuilderProxy, w:World):TaskResult = TaskAvailable
-  def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = (b, w)
+  def perform(b:Worker, w:World, gp:Schema):(Worker, World) = (b, w)
 }
 case class Path(path:List[Vox]) extends Task {
   override def allowed(b:Worker, p:BuilderProxy, w:World) = {
@@ -35,7 +36,7 @@ case class Path(path:List[Vox]) extends Task {
     }
 
   }
-  override def perform(b:Worker, w:World, gp:GoalPool) = {
+  override def perform(b:Worker, w:World, gp:Schema) = {
     val bb = path match {
       case x::xs =>
         b.move(x).setTask(Path(xs))
@@ -58,7 +59,7 @@ case class Place(c:Vox) extends Task {
     }
 
   }
-  override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = (b.setTask(b.task.none).spendStone, w.buildAt(c))
+  override def perform(b:Worker, w:World, gp:Schema):(Worker, World) = (b.setTask(b.task.none).spendStone, w.buildAt(c))
 }
 
 case class DigStair(pt:Vox) extends Task {
@@ -66,7 +67,7 @@ case class DigStair(pt:Vox) extends Task {
     w.isSolid(pt).select(TaskUnavailable, TaskAvailable)
   }
 
-  override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
+  override def perform(b:Worker, w:World, gp:Schema):(Worker, World) = {
     (b.setTask(b.task.none), w.digStair(pt))
   }
 }
@@ -76,7 +77,7 @@ case class DigTunnel(pt:Vox) extends Task {
     (w.isSolid(pt) && (pt |-|-| b.pos).mag == 1).select(TaskUnavailable, TaskAvailable)
   }
 
-  override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
+  override def perform(b:Worker, w:World, gp:Schema):(Worker, World) = {
     (b.setTask(b.task.none), w.dig(pt))
   }
 }
@@ -86,7 +87,7 @@ case class BuildStair(pt:Vox) extends Task {
     (b.hasStone && !w.isSolid(pt)).select(TaskUnavailable, TaskAvailable)
   }
 
-  override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
+  override def perform(b:Worker, w:World, gp:Schema):(Worker, World) = {
     (b.setTask(b.task.none).spendStone, w.placeStair(pt))
   }
 }
@@ -96,7 +97,7 @@ case object Gather extends Task {
     (b.invFree && w.hasStone(b.pos)).select(TaskUnavailable, TaskAvailable)
   }
 
-  override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
+  override def perform(b:Worker, w:World, gp:Schema):(Worker, World) = {
     (b.setTask(b.task.none).give(Stone), w.removeResource(b.pos, Stone))
   }
 }
@@ -106,7 +107,7 @@ case object Drop extends Task {
     b.hasStone.select(TaskUnavailable, TaskAvailable)
   }
 
-  override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
+  override def perform(b:Worker, w:World, gp:Schema):(Worker, World) = {
     val newW = b.inv.map{ r => w.addResource(b.pos, r)}.getOrElse(w)
     (b.setTask(b.task.none).spendStone, newW)
   }
@@ -123,7 +124,7 @@ case class MoveTask(dst:Vox) extends Task {
     }
   }
 
-  override def perform(b:Worker, w:World, gp:GoalPool):(Worker, World) = {
+  override def perform(b:Worker, w:World, gp:Schema):(Worker, World) = {
     (b.setTask(b.task.none).move(dst), w)
   }
 }

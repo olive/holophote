@@ -5,6 +5,7 @@ import Antiqua._
 import in.dogue.holophote.world.{ResourceManager, World}
 import in.dogue.antiqua.data.{Direction3}
 import scala.util.Random
+import in.dogue.holophote.Schema
 
 class EntityManager {
 
@@ -18,42 +19,43 @@ class EntityManager {
     (nv.toList, nb)
   }
 
-  def coordinateTasks(bs:List[Worker], gp:GoalPool, w:World):(List[Worker], GoalPool, World) = {
+  def coordinateTasks(bs:List[Worker], sc:Schema, w:World):(List[Worker], Schema, World) = {
     var vs = bs.toVector
-    var pool = gp
+    var schema = sc
     var world = w
     for (i <- 0 until vs.length) {
       val b = vs(i)
       b.task.allowed(b, new BuilderProxy(vs), world) match {
         case TaskAvailable =>
-          val (bb, pp, ww) = Worker.performTask(b, pool, world)
+          val (bb, pp, ww) = Worker.performTask(b, schema, world)
           vs = vs.updated(i, bb)
-          pool = pp
+          schema = pp
           world = ww
         case TaskBlocked(blocker) =>
           val k = vs.indexOf(blocker)
           val d = Direction3.Planar.randomR(new Random())
           val pos = w.traceDown(blocker.pos --> d --> d)
-          val (blk, pp) = blocker.removeGoal(FailureReason.Jam(b)).giveGoal(Move.create(pos)).update(new BuilderProxy(vs), world, pool)
-          pool = pp
+          val move = sc.createNether(Move.create(pos))
+          val (blk, pp) = blocker.removeGoal(FailureReason.Jam(b)).giveGoal(move).update(new BuilderProxy(vs), world, schema)
+          schema = pp
           vs = vs.updated(k, blk)
-          pool = pool.surrender(blocker.job, blocker.goal)
+          schema = schema.surrender(blocker.job, blocker.goal)
           vs = vs.updated(i, b.removeGoal(FailureReason.Jam(blk)))
-          pool = pool.surrender(b.job, b.goal)
+          schema = schema.surrender(b.job, b.goal)
         case TaskUnavailable =>
           vs = vs.updated(i, b.removeGoal(FailureReason.Unknown/*fixme -- why is it unavailable?*/))
-          pool = pool.surrender(b.job, b.goal)
+          schema = schema.surrender(b.job, b.goal)
       }
     }
-    (vs.toList, pool, world)
+    (vs.toList, schema, world)
   }
 
 
-  def manageGoal(rm:ResourceManager, w:World)(b:Worker, gp:GoalPool): (Worker, GoalPool) = {
+  def manageGoal(rm:ResourceManager, w:World)(b:Worker, sc:Schema): (Worker, Schema) = {
     if (b.noGoal) {
-      gp.giveGoal(b, rm, w)
+      sc.employ(b, rm, w)
     } else {
-      (b, gp)
+      (b, sc)
     }
   }
 }
