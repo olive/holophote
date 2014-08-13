@@ -4,7 +4,7 @@ import scala.util.Random
 import in.dogue.antiqua.graphics.{TileRenderer, Rect}
 import in.dogue.holophote.input.Controls
 import com.deweyvm.gleany.graphics.Color
-import in.dogue.antiqua.data.CP437
+import in.dogue.antiqua.data._
 import in.dogue.antiqua.Antiqua
 import Antiqua._
 import in.dogue.holophote.entities._
@@ -14,6 +14,9 @@ import in.dogue.antiqua.algebra.Monoid
 import in.dogue.holophote.Schema
 import scalaz.IList
 import com.badlogic.gdx.Gdx
+import in.dogue.antiqua.data.FutureFinished
+import in.dogue.holophote.blueprints.RectWall
+import in.dogue.holophote.blueprints.Mine
 
 object GameMode {
   def create(cols:Int, rows:Int, worldSize:Vox, r:Random) = {
@@ -40,24 +43,37 @@ object GameMode {
     val wall6 = RectWall(gatherPt,9,(14,14,1,1)).generate(wg)
     import Monoid._
     val (major, minor) = hole <+> wall <+> wall2 <+> wall3 <+> wall4 <+> wall5 <+> wall6
-    val gp = Schema.create.insertPlan(major,minor)
+    val sc = Schema.create.insertPlan(major,minor)
     val em = new EntityManager()
-    GameMode(cols, rows, world, es, gp, em, WorldViewer.create(cols, rows, world, es), 0)
+    val startF = new Future(() => (es, world, sc))
+    GameMode(cols, rows, world, es, sc, em, WorldViewer.create(cols, rows, world, es), 0, startF)
   }
 }
 
-case class GameMode private (cols:Int, rows:Int, world:World, es:List[Worker], sc:Schema, em:EntityManager, v:WorldViewer, t:Int) {
+case class GameMode private (cols:Int, rows:Int, world:World, es:List[Worker], sc:Schema, em:EntityManager, v:WorldViewer, t:Int, f:Future[(List[Worker], World, Schema)]) {
+
+
+  private def doUpdate = {
+    val (bss, scc, ww) = em.coordinateTasks(es, sc, world)
+    val (bsss, sccc) = bss.fold2(scc, em.manageGoal(new ResourceManager(ww), ww))
+    val (updated, newSchema) = bsss.foldLeft((List[Worker](), sccc)) { case ((ls, pool), b) =>
+      val (nb, np) = b.update(new BuilderProxy(bsss)/*fixme, use weird fold*/, ww, pool)
+      (nb :: ls) @@ np
+    }
+    updated @@ ww @@ newSchema
+  }
+
   private def updateWorld = {
-    if (t % 1 == 0) {
-      val (bss, scc, ww) = em.coordinateTasks(es, sc, world)
-      val (bsss, sccc) = bss.fold2(scc, em.manageGoal(new ResourceManager(ww), ww))
-      val (updated, newSchema) = bsss.foldLeft((List[Worker](), sccc)) { case ((ls, pool), b) =>
-        val (nb, np) = b.update(new BuilderProxy(bsss)/*fixme, use weird fold*/, ww, pool)
-        (nb :: ls) @@ np
-      }
-      copy(es = updated, world = ww, t=t+1, sc=newSchema.update)
-    } else {
-      copy(t=t+1)
+    f.update match {
+      case FutureComputing => this
+
+      case FutureFinished((wks, w, sc)) =>
+        val newF = new Future[(List[Worker], World, Schema)](() => {
+          doUpdate
+        })
+
+        copy(es = wks, world = w, t=t+1, sc=sc.update, f=newF)
+      case FutureError(exc) => throw exc
     }
   }
 
