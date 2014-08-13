@@ -15,7 +15,7 @@ class Engine {
   val r = new Renderer(cols*Game.TileSize, rows*Game.TileSize, 1, ts)
   val tr = TileRenderer.create(cols, rows)
   val rng = new Random(0)
-  var mode = GameMode.create(cols, rows, rng).toMode//TitleMode.create(cols, rows, rng).toMode
+  var mode = GameMode.create(cols, rows, (cols+1, rows+1, 11), rng).toMode//TitleMode.create(cols, rows, rng).toMode
   def update() {
     if (Controls.Escape.justPressed) {
       Gdx.app.exit()

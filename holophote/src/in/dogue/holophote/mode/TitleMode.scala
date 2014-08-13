@@ -11,7 +11,7 @@ import com.deweyvm.gleany.graphics.Color
 import in.dogue.antiqua.data.CP437
 import Antiqua._
 object TitleMode {
-  def create(cols:Int, rows:Int, r:Random) = {
+  def create(cols:Int, rows:Int, ws:Vox, r:Random) = {
     def mkTile(r:Random) = {
       val bg = Color.Green.dim(12 + r.nextDouble)
       val fg = Color.Green.dim(9 + r.nextDouble)
@@ -23,14 +23,14 @@ object TitleMode {
     val span = title.getSpan
     val version = Helper.default.tf.create(Game.Version).toTileGroup |++| ((0, rows - 1))
     val titleOff = (cols - span.width, rows - span.height).map{_/2}
-    TitleMode(cols, rows, title |++| titleOff, version, rect, r)
+    TitleMode(cols, rows, ws, title |++| titleOff, version, rect, r)
   }
 }
 
-case class TitleMode private (cols:Int, rows:Int, title:TileGroup, version:TileGroup, rect:Rect, r:Random) {
+case class TitleMode private (cols:Int, rows:Int, worldSize:Vox, title:TileGroup, version:TileGroup, rect:Rect, r:Random) {
   def update = {
     if (Controls.Space.justPressed) {
-      val mode = GameMode.create(cols, rows, r)
+      val mode = GameMode.create(cols, rows, worldSize, r)
       TransitionMode.create(cols, rows, this.toMode, mode.toMode).toMode
     } else {
       this.toMode

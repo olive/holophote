@@ -13,17 +13,23 @@ object WorldViewer {
   }
 }
 
-case class WorldViewer private (cols:Int, rows:Int, w:World, ws:Seq[Worker], z:Int, off:(Int,Int)) {
+case class WorldViewer private (sCols:Int, sRows:Int, w:World, ws:Seq[Worker], z:Int, off:(Int,Int)) {
   def update(w:World, ws:Seq[Worker]) = {
     val newZ = (z + Controls.Zoom.justPressed).clamp(0, w.layers - 1)
-    copy(w=w, ws=ws, z=newZ)
+    def clamp(p:Cell, min:Int, xMax:Int, yMax:Int) = (p.x.clamp(min, xMax), p.y.clamp(min, yMax))
+    val rawOff = off |+| (Controls.AxisX.zip(3,3), Controls.AxisY.zip(3,3))
+    val newOff = clamp(rawOff, 0, w.cols - sCols, w.rows-sRows)
+    copy(w=w, ws=ws, z=newZ, off=newOff)
   }
   def draw(tr:TileRenderer):TileRenderer = {
-    val r = (0,0,cols,rows)
+    val r = (off.x,off.y,sCols,sRows)
     val layer = Array2dView.cut(w.tiles.getLayer(z), r._1, r._2, r._3, r._4)
-    val layerBelow = (z-1 < 0).select(Array2dView.cut(w.tiles.getLayer(z-1), 0, 0, cols, rows).some, None)
-    layer.foldLeft(tr) { case (r, (p, t)) =>
-      r <+< t.draw(p, layerBelow.map{_.get(p)})
-    } <++< ws.filter { wk => wk.pos.xy.inRange(r) && wk.pos.z == z}.map{_.draw _}
+    val layerBelow = (z-1 < 0).select(Array2dView.cut(w.tiles.getLayer(z-1), r._1, r._2, r._3, r._4).some, None)
+    val tilesDrawn = layer.foldLeft(tr) { case (ren, (p, t)) =>
+      ren <+< t.draw(p, layerBelow.map{_.get(p)})
+    }
+    tilesDrawn.withMove(-off.x, -off.y) { ren =>
+      ren <++< ws.filter { wk => wk.pos.xy.inRange(r) && wk.pos.z == z }.map { _.draw _ }
+    }
   }
 }

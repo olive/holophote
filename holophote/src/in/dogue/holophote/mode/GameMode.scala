@@ -16,15 +16,18 @@ import scalaz.IList
 import com.badlogic.gdx.Gdx
 
 object GameMode {
-  def create(cols:Int, rows:Int, r:Random) = {
+  def create(cols:Int, rows:Int, worldSize:Vox, r:Random) = {
+    val worldCols = worldSize.x
+    val worldRows = worldSize.y
+    val worldLayers = worldSize.z
     var r = new Random(0)
-    val world = World.create(cols, rows, 11, r)
+    val world = World.create(worldCols, worldRows, worldLayers, r)
     r = new Random(0)
     val jobs = Vector(Builder, Gatherer, Miner)
     val es = jobs.map { job =>
-      val x = r.nextInt(cols)
-      val y = r.nextInt(rows)
-      Worker.create(cols, rows, (x, y, 4), job, r)
+      val x = r.nextInt(worldCols)
+      val y = r.nextInt(worldRows)
+      Worker.create((x, y, 4), job, r)
     }.toList
     val wg = world.toGraph(new BuilderProxy(es))
     val gatherPt = (50,25,4)

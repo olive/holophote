@@ -13,7 +13,7 @@ import in.dogue.holophote.{Schema, Holophote}
 
 object Worker {
   var count = 0
-  def create(cols:Int, rows:Int, pos:Vox, job:Job, r:Random) = {
+  def create(pos:Vox, job:Job, r:Random) = {
     val code = job match {
       case Builder => CP437.B
       case Supervisor => CP437.S
