@@ -45,7 +45,7 @@ case class World private (tiles:Array3d[WorldTile]) {
         t.onlyIfs(inRange(t) && isPassable(t) && isStandable(t) && !occupied(t))
       }
       //o_
-      //☺o
+      //☺?
       val slopeUp = dirs.map{ p =>
         val upw = (p |+|+| c) --> Upward
         val ups = upw.onlyIfs(inRange(upw) && isPassable(upw) && isStandable(upw) && !occupied(upw))
@@ -64,7 +64,7 @@ case class World private (tiles:Array3d[WorldTile]) {
       val upPos = c --> Upward
       val up = upPos.onlyIfs(inRange(upPos) && isStair(c))
       val ns = adj.flatten ++ slopeUp.flatten ++ slopeDown.flatten ++ down ++ up
-      ns
+      ns.map{ p => p ->  (p |-|-| c).mag}
     }
   }
 
