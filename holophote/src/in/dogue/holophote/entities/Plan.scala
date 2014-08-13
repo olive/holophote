@@ -68,8 +68,4 @@ case class Plan private (major:Map[Job,List[Goal]], minor:Map[Job,List[Goal]], i
     }
     (bb, plan)
   }
-
-  override def equals(other:Any):Boolean = {
-    throw new RuntimeException("dont use this")
-  }
 }

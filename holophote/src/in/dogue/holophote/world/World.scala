@@ -25,7 +25,7 @@ object World {
     }
     World(tiles)
   }
-  private val dirs = Direction3.Planar.map{ d => d.dx @@ d.dy @@ d.dz }
+  private val dirs = Direction3.Planar.map{ _.dd }
 }
 
 case class World private (tiles:Array3d[WorldTile]) {
@@ -42,13 +42,13 @@ case class World private (tiles:Array3d[WorldTile]) {
       //☺o
       val adj = dirs.map { p =>
         val t = p |+|+| c
-        t.onlyIfs(inRange(t) && isPassable(t) && isStandable(t) && !occupied(t))
+        t.onlyIfs(isPassable(t) && isStandable(t) && !occupied(t))
       }
       //o_
       //☺?
       val slopeUp = dirs.map{ p =>
         val upw = (p |+|+| c) --> Upward
-        val ups = upw.onlyIfs(inRange(upw) && isPassable(upw) && isStandable(upw) && !occupied(upw))
+        val ups = upw.onlyIfs(isPassable(upw) && isStandable(upw) && !occupied(upw))
         ups
       }
       //☺o
@@ -56,15 +56,15 @@ case class World private (tiles:Array3d[WorldTile]) {
       val slopeDown = dirs.map{ p =>
         val over = p |+|+| c
         val dw = over --> Downward
-        dw.onlyIfs(inRange(dw) && !occupied(dw) && !occupied(over) && isPassable(over) && !isStandable(over) && isStandable(dw))
+        dw.onlyIfs(!occupied(dw) && !occupied(over) && isPassable(over) && !isStandable(over) && isStandable(dw))
       }
       val downPos = c --> Downward
-      val down = downPos.onlyIfs(inRange(downPos) && isStair(downPos))
+      val down = downPos.onlyIfs(isStair(downPos))
 
       val upPos = c --> Upward
-      val up = upPos.onlyIfs(inRange(upPos) && isStair(c))
+      val up = upPos.onlyIfs(isStair(c))
       val ns = adj.flatten ++ slopeUp.flatten ++ slopeDown.flatten ++ down ++ up
-      ns.map{ p => p ->  (p |-|-| c).mag}
+      ns.filter{inRange}.map{ p => p ->  (p |-|-| c).mag}
     }
   }
 

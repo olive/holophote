@@ -13,11 +13,14 @@ object Schema {
 case class Schema private (activePlans:Map[PlanId,Plan], netherPlan:Plan) {
   def update = set(activePlans.filter { case (_, p) => !p.isFinished})
 
-  def insertPlan(mj: Seq[(Job, (PlanId) => Goal)], mn: Seq[(Job, (PlanId) => Goal)]):Schema = {
+  def insertPlan(pls: (Seq[(Job, (PlanId) => Goal)],Seq[(Job, (PlanId) => Goal)])):Schema = {
+    val (mj, mn) = pls
     val p = Plan.fromRaw(mj, mn)
+    println(mj.length)
     set(activePlans + (p.id -> p))
   }
 
+  def remaining(id:PlanId) = activePlans.get(id).map{pl => pl.major.values.toList.flatten.length}.getOrElse(0)
 
   def set(ap:Map[PlanId,Plan]) = copy(activePlans=ap)
   def surrender(j:Job, g:Goal):Schema = {

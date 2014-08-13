@@ -7,6 +7,7 @@ import Antiqua._
 import in.dogue.holophote.Holophote
 import scalaz._
 import scalaz.-\/
+import in.dogue.holophote.entities.FailureReason.NoPath
 
 object Goal {
   var id = 0
@@ -170,10 +171,67 @@ case class Stock private (from:Vox, tok:Int, to:(Int,Int,Int,Int), override val 
   }
 }
 
+
 sealed trait DigType
 case object StairWall extends DigType
 case class StairDown(pt:Vox) extends DigType
 case object Tunnel extends DigType
+
+
+object Dig2 {
+  def create(pts:Seq[Vox], dt:DigType)(parent:PlanId) = {
+    Goal.id += 1
+    Dig2(pts, dt, parent, Goal.id)
+  }
+}
+
+case class Dig2 private (pts:Seq[Vox], dt:DigType, override val parent:PlanId, override val id:Int) extends Goal {
+  def reserve = this
+  def isReserved = false
+  def free = this
+  def toOrder(b:Worker, rm:ResourceManager, gr:Graph[Vox,Vox]):FailureReason \/ Order = {
+    //fixme -- only look at free tiles to path to
+    val allAdj = pts.map {
+      p => Direction3.Planar.map { d => p -> (p --> d) }
+    }.flatten.toSet.toList
+    val adjs = allAdj.dropWhile{ case (p, adj) =>
+      Holophote.pfind(b.pos, p, gr).isLeft
+    }
+    adjs.headOption match {
+      case None => -\/(FailureReason.NoPath(b.pos, (-1,-1,-1)))
+      case Some((_, adj)) =>
+        for {
+          path <- Holophote.pfind(b.pos, adj, gr)
+        } yield {
+          val first = Path(path)
+          val sorted = (b.pos +: pts.sortBy{pt => (pt |-|-| adj).mag }).pairwise.dropRight(1)
+          val rest = for {
+            (src, dst) <- sorted
+          } yield {
+            List(DigTunnel(dst), DeferredPath(src,dst))
+          }
+          TaskList(List(first) ++ rest.flatten)
+        }
+    }
+  }
+
+  def check(b:Worker, w:World) = {
+    pts.forall{w.isPassable}
+    //dt match {
+    //  case StairDown(t) => w.isStair(t)
+    //  case StairWall => w.isStair(pt)
+    //  case Tunnel => w.isPassable(pt)
+    //}
+  }
+
+  def isPossibleFor(b:Worker, rm:ResourceManager, w:World) = {
+    true
+    //Direction3.Planar.exists{d =>
+    //  val p = pt --> d
+    //  Holophote.pfind(b.pos, p, w.toGraph(new BuilderProxy(List()))/*hack*/).isRight
+    //}
+  }
+}
 
 object Dig {
   def create(pt:Vox, dt:DigType)(parent:PlanId) = {

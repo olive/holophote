@@ -25,16 +25,17 @@ class EntityManager {
     var world = w
     for (i <- 0 until vs.length) {
       val b = vs(i)
-      b.task.allowed(b, new BuilderProxy(vs), world) match {
+      val (t, allowed) = b.task.allowed(b, new BuilderProxy(vs), world)
+      allowed match {
         case TaskAvailable =>
-          val (bb, pp, ww) = Worker.performTask(b, schema, world)
+          val (bb, pp, ww) = Worker.performTask(b.setTask(t), schema, world)
           vs = vs.updated(i, bb)
           schema = pp
           world = ww
         case TaskBlocked(blocker) =>
           val k = vs.indexOf(blocker)
           val d = Direction3.Planar.randomR(new Random())
-          val pos = w.traceDown(blocker.pos --> d --> d)
+          val pos = w.traceDown(blocker.pos --> d --> d --> d --> d)
           val move = sc.createNether(Move.create(pos))
           val (blk, pp) = blocker.removeGoal(FailureReason.Jam(b)).giveGoal(move).update(new BuilderProxy(vs), world, schema)
           schema = pp

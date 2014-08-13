@@ -22,7 +22,7 @@ object Worker {
     }
     val tile = code.mkTile(Color.Black, Color.White)
     count += 1
-    Worker(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, job, count, None)
+    Worker(pos, tile,  r, 0, NoTask, NoOrder, NoGoal, Stone.some, job, count, "", None)
   }
 
   def performTask(builder:Worker, sc:Schema, world:World) = {
@@ -49,7 +49,7 @@ object Worker {
 
 }
 
-case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], job:Job, id:Int, lastFailed:Option[FailureReason]) {
+case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, goal:Goal, inv:Option[Resource], job:Job, id:Int, pstring:String, lastFailed:Option[FailureReason]) {
   println(this)
   def noOrder = order.isNone
   def noTask = task.isNone
@@ -84,11 +84,12 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
   }
 
   def update(p:BuilderProxy, w:World, pool:Schema): (Worker, Schema) = {
-    if (noOrder) {
+    val (newSelf, newSchema) = if (noOrder) {
       updateOrder(p, w, pool)
     } else {
       this @@ pool
     }
+    newSelf.copy(pstring=newSchema.remaining(goal.parent).toString) @@ newSchema
   }
 
   def removeGoal(reason:FailureReason) = {
@@ -113,6 +114,6 @@ case class Worker(pos:Vox, tile:Tile, r:Random, t:Int, task:Task, order:Order, g
 
   override def toString:String = {
     val fail = lastFailed.fold(""){l =>  "\n    Failed because:%s".format(l)}
-    "%s:#%d@%s\n    Goal:%s\n    Ords:%s\n    Task:%s%s".format(job, id, pos, goal, order, task, fail)
+    "%s:#%d@%s\n    Plan:%s\n    Goal:%s\n    Ords:%s\n    Task:%s%s".format(job, id, pos, pstring, goal, order, task, fail)
   }
 }
